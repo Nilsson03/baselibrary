@@ -64,7 +64,7 @@ public class FileHelper {
      * @param pathName Путь к директории.
      * @return Созданная или существующая директория.
      */
-    public static File getDirectory(String pathName) throws IOException {
+    public static File getOrCreateDirectory(String pathName) throws IOException {
         validatePathName(pathName);
 
         File directory = new File(pathName);
@@ -126,7 +126,7 @@ public class FileHelper {
 
         Optional<File> directoryOptional;
         try {
-            directoryOptional = Optional.of(getDirectory(dataFolder));
+            directoryOptional = Optional.of(getOrCreateDirectory(dataFolder));
         } catch (IOException exception) {
             ConsoleLogger.warn("baselibrary", "Не удалось получить директорию %s по причине %s", dataFolder, exception);
             directoryOptional = Optional.empty();
