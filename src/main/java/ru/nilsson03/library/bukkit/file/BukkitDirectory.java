@@ -1,7 +1,7 @@
 package ru.nilsson03.library.bukkit.file;
 
 import com.google.common.base.Preconditions;
-import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
@@ -15,24 +15,18 @@ public class BukkitDirectory {
     private final Map<String, BukkitConfig> cached = new HashMap<>();
 
     private final NPlugin plugin;
-    private final FileRepository pluginFileRepository;
 
-    protected BukkitDirectory(NPlugin plugin, File directory) {
+    protected BukkitDirectory(NPlugin plugin, File directory, Map<String, BukkitConfig> listOfFiles) {
         this.plugin = plugin;
-        this.pluginFileRepository = plugin.fileRepository();
         this.directoryName = directory.getName();
-
-        Objects.requireNonNull(pluginFileRepository, "fileRepository cant be null, class BukkitDirectory, method of(NPlugin plugin, File directory)");
-
-        List<BukkitConfig> cache = pluginFileRepository.getAllFromDirectory(directory.getAbsolutePath());
-        cache.forEach( (bukkitConfig -> cached.put(bukkitConfig.getName(), bukkitConfig)));
+        cached.putAll(listOfFiles);
     }
 
-    public static BukkitDirectory of(NPlugin plugin, File directory) throws ExceptionInInitializerError, NullPointerException {
+    public static BukkitDirectory of(NPlugin plugin, File directory, Map<String, BukkitConfig> listOfFiles) throws ExceptionInInitializerError, NullPointerException {
         Objects.requireNonNull(plugin, "plugin cannot be null");
         Preconditions.checkArgument(directory != null && directory.isDirectory(), "directory cannot be null or file");
 
-        return new BukkitDirectory(plugin, directory);
+        return new BukkitDirectory(plugin, directory, listOfFiles);
     }
 
     public void removeConfig(String fileName) {
@@ -68,5 +62,36 @@ public class BukkitDirectory {
         }
 
         return cached.containsKey(fileName);
+    }
+
+    public void save(String fileName) {
+        if (!containsFileWithName(fileName)) {
+            ConsoleLogger.warn(plugin, "The %s configuration file was not found in the %s directory!", fileName, directoryName);
+            return;
+        }
+
+        Optional<BukkitConfig> configOptional = getConfig(fileName);
+        BukkitConfig config = configOptional.get();
+        config.saveConfiguration();
+    }
+
+    public void reload(String fileName) {
+        if (!containsFileWithName(fileName)) {
+            ConsoleLogger.warn(plugin, "The %s configuration file was not found in the %s directory!", fileName, directoryName);
+            return;
+        }
+
+        Optional<BukkitConfig> configOptional = getConfig(fileName);
+        BukkitConfig bukkitConfig = configOptional.get();
+        FileConfiguration configuration = FileHelper.reloadFile(bukkitConfig.getPlugin(), bukkitConfig.getFileConfiguration());
+        bukkitConfig.updateFileConfiguration(configuration);
+    }
+
+    public Optional<BukkitConfig> getConfig(String fileName) {
+        return Optional.ofNullable(this.cached.get(fileName));
+    }
+
+    public List<BukkitConfig> getCached() {
+        return new ArrayList<>(cached.values());
     }
 }
