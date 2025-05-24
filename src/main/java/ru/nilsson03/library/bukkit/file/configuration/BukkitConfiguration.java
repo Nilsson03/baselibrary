@@ -39,7 +39,8 @@ public interface BukkitConfiguration {
         FileRepository fileRepository = FileRepository.of(getPlugin());
 
         try {
-            return fileRepository.getByName(getFileName());
+            return fileRepository.getByName(getFileName())
+                    .orElseThrow(FileNotFoundException::new);
         } catch (FileNotFoundException exception) {
             ConsoleLogger.warn("baselibrary",  "Couldn't get %s file in %s plugin repository, reason %s ", getFileName(),  getPlugin().getName(), exception.getMessage());
             throw new RuntimeException(exception.getMessage());
