@@ -1,13 +1,10 @@
 package ru.nilsson03.library.bukkit.file;
 
-
-import org.bukkit.configuration.file.FileConfiguration;
 import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,27 +45,12 @@ public class FileRepository {
 
         if (initializationMap.containsKey(plugin)) {
             ConsoleLogger.debug(plugin, "Failed to initialize FileRepository for %s plugin because a repository has already been created for it", plugin.getName());
+            throw new IllegalStateException("Failed to initialize FileRepository for " + plugin.getName() + " plugin because a repository has already been created for it");
         }
 
         this.plugin = plugin;
 
         initializationMap.put(plugin, this);
-    }
-
-    public void removeFile(String directory, BukkitConfig config) {
-        if (directories.containsKey(directory)) {
-            directories.get(directory).removeConfig(config);
-            String fileName = config.getFile().getName();
-            boolean delete = config.getFile().delete();
-
-            if (!delete) {
-                ConsoleLogger.warn("baselibrary", "Couldn't delete %s file from %s directory", fileName, directory);
-            } else {
-                ConsoleLogger.info("baselibrary", "Deleted %s file from %s directory", fileName, directory);
-            }
-        } else {
-            ConsoleLogger.warn("baselibrary", "The %s file could not be deleted from the %s directory because the directory was not found in the list.", config.getName(), directory);
-        }
     }
 
     public void load() {
@@ -88,21 +70,24 @@ public class FileRepository {
             return;
         }
 
-        String path = plugin.getDataFolder().getPath() + File.separator + directory;
+        if (directories.containsKey(directory)) {
+            ConsoleLogger.warn(plugin, "The %s directory has already been added to the repository, I'm skipping it.", directory);
+            return;
+        }
+
+        String normalizePath = normalizePath(plugin.getDataFolder().getPath() + File.separator + directory);
 
         File directoryFile;
         try {
-            directoryFile = FileHelper.getDirectory(path);
+            directoryFile = FileHelper.getOrCreateDirectory(normalizePath);
         } catch (IOException exception) {
-            ConsoleLogger.error("baselibrary", "Couldn't get or create a directory with a path: %s", path);
-            throw new RuntimeException("Couldn't get or create a directory with a path: " + path + " : " + exception.getMessage());
+            ConsoleLogger.error(plugin, "Couldn't get or create a directory with a path: %s", normalizePath);
+            throw new RuntimeException("Couldn't get or create a directory with a path: " + normalizePath + " : " + exception.getMessage());
         }
 
-        BukkitDirectory bukkitDirectory = BukkitDirectory.of(plugin, directoryFile);
-        List<BukkitConfig> loadedFiles = new ArrayList<>();
-        loadFilesRecursively(directoryFile, "", loadedFiles);
-
-        directoryFilesMap.put(directory != null ? directory : "", loadedFiles);
+        Map<String, BukkitConfig> listOfFiles = loadFilesRecursively(directoryFile, "");
+        BukkitDirectory bukkitDirectory = BukkitDirectory.of(plugin, directoryFile, listOfFiles);
+        directories.put(normalizePath, bukkitDirectory);
     }
 
     private boolean shouldSkipContentParsing(File file) {
@@ -113,21 +98,31 @@ public class FileRepository {
         return excludedDirectoryFromParsing.contains(directoryName);
     }
 
-    private void loadFilesRecursively(File dir, String relativePath, List<BukkitConfig> result) {
+    protected Map<String, BukkitConfig> loadFilesRecursively(File dir, String relativePath) {
+        Map<String, BukkitConfig> result = new HashMap<>();
+        String currentRelativePath = relativePath != null ? relativePath : "";
         for (File file : Objects.requireNonNull(dir.listFiles())) {
             if (file.isDirectory()) {
-                loadFilesRecursively(file,
-                        relativePath + file.getName() + "/", result);
+                String normalizePath = normalizePath(currentRelativePath + file.getName() + File.separator);
+                result.putAll(loadFilesRecursively(file, normalizePath));
             } else if (file.getName().endsWith(".yml")) {
                 String name = file.getName().substring(0, file.getName().lastIndexOf('.'));
                 boolean skipParsing = shouldSkipContentParsing(file);
 
-                if (skipParsing)
+                if (skipParsing) {
                     ConsoleLogger.debug(plugin, "Skipping load of %s", name);
+                    continue;
+                }
 
-                result.add(new BukkitConfig(plugin, name));
+                if (isFileExistsInAnyDirectory(name)) {
+                    ConsoleLogger.warn(plugin, "Duplicate config file name %s found in %s", name, file.getParent());
+                    continue;
+                }
+
+                result.put(name, new BukkitConfig(plugin, name));
             }
         }
+        return result;
     }
 
     /**
@@ -135,20 +130,17 @@ public class FileRepository {
      *
      * @param name имя конфигурации
      * @return найденная конфигурация
-     * @throws FileNotFoundException если конфигурация не найдена
      */
-    public BukkitConfig getByName(String name) throws FileNotFoundException {
-        String directoryName = plugin.getDataFolder().getName();
-        Optional<BukkitConfig> optional = directoryFilesMap.get(directoryName)
-                .stream()
-                .filter(predicate -> predicate.getName().equals(name))
-                .findFirst();
+    public Optional<BukkitConfig> getByName(String name) {
+        String directoryPath = normalizePath(plugin.getDataFolder().getAbsolutePath());
 
-        if (optional.isPresent()) {
-            return optional.get();
+        if (!directories.containsKey(directoryPath)) {
+            ConsoleLogger.debug(plugin, "Couldn't find %s directory in cache", directoryPath);
+            return Optional.empty();
         }
 
-        throw new FileNotFoundException("Не удалось найти файл с названием: " + name);
+        return directories.get(directoryPath)
+                .getConfig(name);
     }
 
     /**
@@ -157,17 +149,18 @@ public class FileRepository {
      * @param directory относительный путь к директории (null для корневой)
      * @param name имя конфигурации (без .yml)
      * @return найденная конфигурация
-     * @throws FileNotFoundException если конфигурация не найдена
      */
-    public BukkitConfig getByName(String directory, String name) throws FileNotFoundException {
-        String dirKey = directory != null ? directory : "";
-        Optional<BukkitConfig> config = directoryFilesMap.getOrDefault(dirKey, Collections.emptyList())
-                .stream()
-                .filter(predicate -> predicate.getName().equals(dirKey + "/" + name))
-                .findFirst();
+    public Optional<BukkitConfig> getByName(String directory, String name) {
+        String dirPath = directory != null ? normalizePath(directory) : "";
+        String normalizePath = normalizePath(plugin.getDataFolder().getPath() + File.separator + dirPath);
 
-        return config.orElseThrow(() ->
-                new FileNotFoundException("The file '" + name + "' was not found in the directory '" + dirKey + "'"));
+        if (!directories.containsKey(normalizePath)) {
+            ConsoleLogger.debug(plugin, "Couldn't find %s directory in cache", normalizePath);
+            return Optional.empty();
+        }
+
+        return directories.get(normalizePath)
+                .getConfig(name);
     }
 
     /**
@@ -179,22 +172,37 @@ public class FileRepository {
      */
     public Optional<BukkitConfig> create(String directory, String name) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
+        Objects.requireNonNull(name, "name cannot be null");
 
-        String path = plugin.getDataFolder().getPath() + File.pathSeparator + directory;
+        String dirPath = directory != null ? normalizePath(directory) : "";
+        String fullPath = normalizePath(plugin.getDataFolder().getPath() + File.separator + dirPath);
 
-        File directoryFile;
-        try {
-            directoryFile = FileHelper.getDirectory(path);
-        } catch (IOException exception) {
-            ConsoleLogger.error("baselibrary", "Couldn't get or create a directory with path: " + path);
+        if (!directories.containsKey(fullPath)) {
+            ConsoleLogger.warn(plugin, "Directory %s not found in cache!", fullPath);
             return Optional.empty();
         }
 
-        File configFile = FileHelper.createFileOrLoad(directoryFile, name);
-        BukkitConfig bukkitConfig = new BukkitConfig(plugin, (directory != null ? directory + "/" : "") + name);
-        directoryFilesMap.computeIfAbsent(directory, k -> new ArrayList<>()).add(bukkitConfig);
+        if (isFileExistsInAnyDirectory(name)) {
+            ConsoleLogger.warn(plugin, "File %s already exists in another directory!", name);
+            return Optional.empty();
+        }
 
-        return Optional.of(bukkitConfig);
+        BukkitDirectory bukkitDirectory = directories.get(fullPath);
+        BukkitConfig bukkitConfig = new BukkitConfig(plugin, name);
+
+        try {
+            if (bukkitConfig.getFile().exists()) {
+                ConsoleLogger.warn(plugin, "File %s already exists on disk!", name);
+                return Optional.empty();
+            }
+
+            bukkitDirectory.addNewConfig(bukkitConfig);
+            bukkitConfig.saveConfiguration();
+            return Optional.of(bukkitConfig);
+        } catch (Exception e) {
+            ConsoleLogger.error(plugin, "Failed to create config %s: %s", name, e.getMessage());
+            return Optional.empty();
+        }
     }
 
     /**
@@ -204,48 +212,25 @@ public class FileRepository {
      * @return список конфигураций
      */
     public List<BukkitConfig> getAllFromDirectory(String directory) {
-        return directoryFilesMap.getOrDefault(directory != null ? directory : "", Collections.emptyList());
+        String dirPath = directory != null ? normalizePath(directory) : "";
+        String normalizePath = normalizePath(plugin.getDataFolder().getPath() + File.separator + dirPath);
+
+        if (!directories.containsKey(normalizePath)) {
+            ConsoleLogger.warn(plugin, "It is impossible to get a list of configuration files from the %s directory because it has not been added to the cache!", directory);
+            return Collections.emptyList();
+        }
+
+        BukkitDirectory bukkitDirectory = directories.get(normalizePath);
+        return bukkitDirectory.getCached();
     }
 
-    /**
-     * Сохраняет все конфигурации указанного плагина.
-     */
-    public void save(String directory, String fileName) {
-        BukkitConfig bukkitConfig;
-        try {
-            bukkitConfig = getByName(directory, fileName);
-        } catch (FileNotFoundException exception) {
-            String text = "Не удалось сохранить файл" + directory + "/" + fileName;
-            ConsoleLogger.warn("baselibrary", "Couldn't save %s file.", directory + "/" + fileName);
-            throw new RuntimeException(text + ":" + exception.getMessage());
-        }
-
-        if (bukkitConfig != null) {
-            bukkitConfig.saveConfiguration();
-        }
+    private boolean isFileExistsInAnyDirectory(String fileName) {
+        return directories.values()
+                .stream()
+                .anyMatch(dir -> dir.containsFileWithName(fileName));
     }
 
-    /**
-     * Перезагружает конкретную конфигурацию плагина по имени файла.
-     *
-     * @param fileName имя конфигурации (без .yml)
-     */
-    public void reload(String directory, String fileName) {
-
-        BukkitConfig bukkitConfig;
-        try {
-            bukkitConfig = getByName(directory, fileName);
-        } catch (FileNotFoundException exception) {
-            String text = "Не удалось перезагрузить файл" + directory + "/" + fileName;
-            ConsoleLogger.warn("baselibrary", "Failed to reload %s file.", directory + "/" + fileName);
-            throw new RuntimeException(text + ":" + exception.getMessage());
-        }
-
-        if (bukkitConfig == null) {
-            return;
-        }
-
-        FileConfiguration configuration = FileHelper.reloadFile(bukkitConfig.getPlugin(), bukkitConfig.getFileConfiguration());
-        bukkitConfig.updateFileConfiguration(configuration);
+    private String normalizePath(String path) {
+        return path.replace("/", File.separator).replace("\\", File.separator);
     }
 }
