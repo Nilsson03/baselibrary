@@ -6,7 +6,7 @@
 
     <groupId>ru.nilsson03</groupId>
     <artifactId>baselibrary</artifactId>
-    <version>1.0.8-ITEM-UTILS</version>
+    <version>1.0.9-FILE-UPDATE</version>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
