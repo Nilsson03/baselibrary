@@ -102,6 +102,15 @@ public class BukkitConfig {
         return getBukkitConfiguration().getFileOperations();
     }
 
+    public void delete() {
+        boolean delete = file.delete();
+
+        if (delete)
+            ConsoleLogger.info(plugin, "Deleted configuration %s for plugin %s.", getFile().getName(), plugin.getName());
+        else
+            ConsoleLogger.warn(plugin, "Failed to delete configuration %s for plugin %s.", getFile().getName(), plugin.getName());
+    }
+
     @Deprecated
     public FileConfiguration getConfiguration() {
         return fileConfiguration;
