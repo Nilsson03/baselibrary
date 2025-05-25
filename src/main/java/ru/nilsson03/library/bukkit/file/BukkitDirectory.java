@@ -31,15 +31,16 @@ public class BukkitDirectory {
         return new BukkitDirectory(plugin, directory, listOfFiles);
     }
 
-    public void removeConfig(String fileName) {
+    public void removeAndDeleteConfig(String fileName) {
         if (!containsFileWithName(fileName))
             return;
 
         this.cached.remove(fileName);
     }
 
-    public void removeConfig(BukkitConfig config) {
-        removeConfig(config.getName());
+    public void removeAndDeleteConfig(BukkitConfig config) {
+        removeAndDeleteConfig(config.getName());
+        config.delete();
     }
 
     public void addNewConfig(BukkitConfig config) {
@@ -51,8 +52,6 @@ public class BukkitDirectory {
             ConsoleLogger.debug(plugin, "The config file %s is already contains in directory", name);
             return;
         }
-
-        // todo сделать проверку на содержании в других категориях в (fileRepo)
 
         this.cached.put(name, config);
     }
