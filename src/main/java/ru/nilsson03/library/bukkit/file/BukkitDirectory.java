@@ -12,12 +12,14 @@ import java.util.*;
 public class BukkitDirectory {
 
     private final String directoryName;
+    private final String path;
     private final Map<String, BukkitConfig> cached = new HashMap<>();
 
     private final NPlugin plugin;
 
     protected BukkitDirectory(NPlugin plugin, File directory, Map<String, BukkitConfig> listOfFiles) {
         this.plugin = plugin;
+        this.path = directory.getPath();
         this.directoryName = directory.getName();
         cached.putAll(listOfFiles);
     }
@@ -93,5 +95,9 @@ public class BukkitDirectory {
 
     public List<BukkitConfig> getCached() {
         return new ArrayList<>(cached.values());
+    }
+
+    public String getPath() {
+        return path;
     }
 }
