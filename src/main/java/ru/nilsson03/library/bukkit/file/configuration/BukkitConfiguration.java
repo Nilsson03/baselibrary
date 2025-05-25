@@ -32,6 +32,7 @@ public interface BukkitConfiguration {
      * Очищает текущее содержимое Map, полученное через getFileContent(),
      * и заполняет его данными из соответствующей секции YAML-файла.
      */
+
     default void load() {
         Map<String, String> strings = getFileContent();
         Objects.requireNonNull(strings, "File content (Map with value) is null");

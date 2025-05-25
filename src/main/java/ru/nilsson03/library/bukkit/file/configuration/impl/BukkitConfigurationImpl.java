@@ -6,6 +6,7 @@ import ru.nilsson03.library.bukkit.file.configuration.BukkitConfiguration;
 import ru.nilsson03.library.bukkit.file.configuration.ConfigOperations;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
