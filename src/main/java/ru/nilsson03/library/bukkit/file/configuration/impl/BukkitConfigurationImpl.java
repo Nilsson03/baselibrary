@@ -17,8 +17,6 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
     private final FileConfiguration bukkitConfiguration;
     private final ConfigOperations fileOperations;
 
-    private String yamlConfigurationKey;
-
     public BukkitConfigurationImpl(NPlugin plugin, String fileName, FileConfiguration bundleConfiguration) throws NullPointerException {
         if (plugin == null) {
             ConsoleLogger.debug("baselibrary", "Plugin cannot be null, class %s, plugin", getClass().getName());
@@ -66,9 +64,5 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
 
     public NPlugin getPlugin() {
         return plugin;
-    }
-
-    public String getYamlConfigurationKey() {
-        return yamlConfigurationKey;
     }
 }
