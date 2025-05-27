@@ -1,7 +1,6 @@
 package ru.nilsson03.library.alt.top;
 
 import ru.nilsson03.library.NPlugin;
-import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
@@ -15,8 +14,7 @@ public class TopManager<K, V> {
 
     private final NPlugin plugin;
 
-    private final BukkitConfig messagesFile;
-    private LinkedHashMap<Long, V> topStorage;
+    private final LinkedHashMap<Long, V> topStorage;
     private final Function<V, K> keyExtractor;
     private final ToLongFunction<V> valueExtractor;
     private final Function<K, String> nameFormatter;
@@ -25,12 +23,10 @@ public class TopManager<K, V> {
     private TopScheduler scheduler;
 
     public TopManager(NPlugin plugin,
-                      BukkitConfig messagesFile,
                       Function<V, K> keyExtractor,
                       ToLongFunction<V> valueExtractor,
                       Function<K, String> nameFormatter) {
         this.plugin = plugin;
-        this.messagesFile = messagesFile;
         this.keyExtractor = keyExtractor;
         this.valueExtractor = valueExtractor;
         this.nameFormatter = nameFormatter;
