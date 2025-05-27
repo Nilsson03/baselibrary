@@ -1,0 +1,131 @@
+package ru.nilsson03.library.alt.top;
+
+import ru.nilsson03.library.NPlugin;
+import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
+import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.ToLongFunction;
+import java.util.stream.Collectors;
+
+public class TopManager<K, V> {
+
+    private final NPlugin plugin;
+
+    private final BukkitConfig messagesFile;
+    private LinkedHashMap<Long, V> topStorage;
+    private final Function<V, K> keyExtractor;
+    private final ToLongFunction<V> valueExtractor;
+    private final Function<K, String> nameFormatter;
+
+    private final TaskScheduler taskScheduler;
+    private TopScheduler scheduler;
+
+    public TopManager(NPlugin plugin,
+                      BukkitConfig messagesFile,
+                      Function<V, K> keyExtractor,
+                      ToLongFunction<V> valueExtractor,
+                      Function<K, String> nameFormatter) {
+        this.plugin = plugin;
+        this.messagesFile = messagesFile;
+        this.keyExtractor = keyExtractor;
+        this.valueExtractor = valueExtractor;
+        this.nameFormatter = nameFormatter;
+        this.topStorage = new LinkedHashMap<>();
+        this.taskScheduler = plugin.taskScheduler();
+    }
+
+    public void updateTop(Collection<V> collection) {
+        topStorage.clear();
+        List<V> sorted = collection.stream()
+                .sorted(Comparator.comparingLong(valueExtractor).reversed())
+                .toList();
+
+        for (int i = 0; i < sorted.size(); i++) {
+            topStorage.put((long) (i + 1), sorted.get(i));
+        }
+    }
+
+    public void startUpdater(Collection<V> collection, long updateIntervalSeconds) {
+
+        if (scheduler != null)
+            stopUpdater();
+
+        scheduler = new TopScheduler(plugin);
+
+        scheduler.startUpdater(taskScheduler.createTask(() -> updateTop(collection))
+                .withDelay(Duration.ofSeconds(updateIntervalSeconds))
+                .withInterval(Duration.ofSeconds(updateIntervalSeconds))
+                .schedule());
+    }
+
+    public void stopUpdater() {
+        if (scheduler == null) {
+            ConsoleLogger.warn(plugin, "It was not possible to cancel the task of updating the top for the %s plugin, because the top updater is null.", plugin.getName());
+            return;
+        }
+        scheduler.stopUpdater();
+    }
+
+    public V getPlayerByRank(int rank) {
+        return topStorage.get((long) rank);
+    }
+
+    public long getPlayerRank(K key) {
+        return topStorage.entrySet()
+                .stream()
+                .filter(entry -> keyExtractor.apply(entry.getValue()).equals(key))
+                .mapToLong(Map.Entry::getKey)
+                .findFirst()
+                .orElse(-1);
+    }
+
+    public List<V> getTopPlayers(int limit) {
+        return topStorage.entrySet()
+                .stream()
+                .limit(limit)
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    public List<Map.Entry<Integer, V>> getTopPlayersWithPositions(int limit) {
+        List<Map.Entry<Integer, V>> topPlayers = new ArrayList<>();
+        int count = Math.min(limit, topStorage.size());
+
+        for (int i = 0; i < count; i++) {
+            long rank = i + 1;
+            V value = topStorage.get(rank);
+            topPlayers.add(new AbstractMap.SimpleEntry<>(i + 1, value));
+        }
+        return topPlayers;
+    }
+
+    public List<String> getTopPlayersFormatted(String format, int limit) {
+        List<String> top = new ArrayList<>();
+        List<Map.Entry<Integer, V>> topPlayers = getTopPlayersWithPositions(limit);
+
+        for (int i = 0; i < limit; i++) {
+            if (i < topPlayers.size()) {
+                Map.Entry<Integer, V> entry = topPlayers.get(i);
+                K key = keyExtractor.apply(entry.getValue());
+                String name = nameFormatter.apply(key);
+                long value = valueExtractor.applyAsLong(entry.getValue());
+
+                top.add(format
+                        .replace("{number}", String.valueOf(entry.getKey()))
+                        .replace("{player}", name)
+                        .replace("{value}", String.valueOf(value)));
+            } else {
+                top.add("Пусто");
+            }
+        }
+        return top;
+    }
+
+    public LinkedHashMap<Long, V> getTopStorage() {
+        return this.topStorage;
+    }
+}
