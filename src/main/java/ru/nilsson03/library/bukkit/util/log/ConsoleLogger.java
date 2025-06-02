@@ -107,7 +107,7 @@ public final class ConsoleLogger {
                     return;
                 }
 
-                logger.log(level, String.format(format, args));
+                logger.log(level, format, args);
             }
         }
     }
