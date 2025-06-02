@@ -1,12 +1,11 @@
-package ru.nilsson03.library.bukkit.util;
+package ru.nilsson03.library.bukkit.util.loc;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +13,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class LocationUtil {
+
+    private static final double HEIGHT_INCREASE_PER_LINE = 0.2;
 
     public static Location[] getCorners(Location one, Location two) {
 
@@ -42,9 +43,9 @@ public class LocationUtil {
         return res;
     }
 
-    public static Location updateHologramHeight(Location location, List<String> lines, double heightIncreasePerLine, double baseHeight) {
+    public static Location updateHologramHeight(Location location, List<String> lines, double baseHeight) {
         int lineCount = lines.size();
-        double newHeight = location.getY() + baseHeight + lineCount * heightIncreasePerLine;
+        double newHeight = location.getY() + baseHeight + lineCount * HEIGHT_INCREASE_PER_LINE;
         Location newLocation = location.clone();
         newLocation.setY(newHeight);
         newLocation.setX(location.getX() + 0.5);
@@ -73,42 +74,24 @@ public class LocationUtil {
         return world.getName() + ";" + x + ";" + y + ";" + z + ";" + yaw + ";" + pitch;
     }
 
-    public static Location getTarget(LivingEntity entity) {
-
-        Location location = entity.getLocation();
-
-        try {
-
-            Block block = entity.getTargetBlockExact(300);
-
-            if (block != null) {
-
-                location = block.getLocation();
-
-            }
-
-        } catch (Exception ignored) {}
-
-        return location;
-    }
-
     public static boolean isDistance(Location location1, Location location2, double distance) {
         return location1.distance(location2) <= distance;
     }
 
-    public static Player getFirstNearPlayer(Player player, double radius) {
-
+    public static Optional<Player> getFirstNearPlayer(Player player, double radius) {
         Collection<Entity> near = Objects.requireNonNull(player.getLocation().getWorld()).getNearbyEntities(player.getLocation(), radius, radius, radius);
 
-        double finalRadius = radius * radius;
+        if (near.isEmpty()) {
+            ConsoleLogger.debug("baselibrary", "Couldn't find entities within %s radius of player %s.", radius, player.getUniqueId());
+            return Optional.empty();
+        }
 
-        Optional<Player> optional = near.stream()
+        double finalRadius = radius * radius;
+        return near.stream()
                 .filter(entity -> entity instanceof Player)
                 .map(entity -> (Player) entity)
                 .filter(target -> target != player)
                 .filter(target -> player.getLocation().distanceSquared(target.getLocation()) < finalRadius)
                 .findFirst();
-
-        return optional.orElse(null);
     }
 }
