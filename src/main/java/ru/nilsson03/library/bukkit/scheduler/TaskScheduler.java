@@ -25,6 +25,15 @@ public class TaskScheduler {
         tasks.remove(taskId);
     }
 
+    public boolean isRunning(UUID taskId) {
+        Optional<ScheduledTask> optionalScheduledTask = getTask(taskId);
+        if (optionalScheduledTask.isPresent()) {
+            ScheduledTask task = optionalScheduledTask.get();
+            return !task.isCompleted();
+        }
+        return false;
+    }
+
     public Optional<ScheduledTask> getTask(UUID taskId) {
         return Optional.ofNullable(tasks.get(taskId));
     }
