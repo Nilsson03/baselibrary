@@ -19,6 +19,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import ru.nilsson03.library.bukkit.integration.PluginDependency;
 import ru.nilsson03.library.bukkit.util.loc.Cuboid;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
@@ -46,6 +47,7 @@ public class RegionRestorer {
      * @param cuboid Регион для восстановления
      * @param delayMinutes время до восстановления в минутах
      */
+    @PluginDependency(name = "WorldEdit", minVersion = "7.2.9", skipIfUnavailable = true)
     public void scheduleRegionRestore(Cuboid cuboid, String uniqueName, long delayMinutes) {
         Location center = cuboid.getCenter();
         World world = cuboid.getWorld();
@@ -69,6 +71,7 @@ public class RegionRestorer {
         return new File(backupsFolder, uniqueName + "_" + timestamp + ".schem");
     }
 
+    @PluginDependency(name = "WorldEdit", minVersion = "7.2.9", skipIfUnavailable = true)
     private void saveRegionToFile(Cuboid cuboid, File backupFile) {
         com.sk89q.worldedit.world.World world = BukkitAdapter.adapt(cuboid.getWorld());
         BlockVector3 min = BlockVector3.at(cuboid.getMinX(), cuboid.getMinY(), cuboid.getMinZ());
@@ -95,6 +98,7 @@ public class RegionRestorer {
         }
     }
 
+    @PluginDependency(name = "WorldEdit", minVersion = "7.2.9", skipIfUnavailable = true)
     private void restoreRegionFromFile(com.sk89q.worldedit.world.World world, String uniqueName, File backupFile) {
         ClipboardFormat format = ClipboardFormats.findByFile(backupFile);
         if (format == null) {
