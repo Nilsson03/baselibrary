@@ -6,6 +6,9 @@ import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
+import ru.nilsson03.library.load.LibraryLoader;
+
+import java.io.File;
 
 public class BaseLibrary extends JavaPlugin {
 
@@ -26,6 +29,10 @@ public class BaseLibrary extends JavaPlugin {
         }
 
         ConsoleLogger.register(this);
+
+        File pluginsFolder = new File(getDataFolder().getParent());
+        LibraryLoader libraryLoader = new LibraryLoader(pluginsFolder);
+        libraryLoader.loadLibraries("https://github.com/Nilsson03/menulibrary/releases/download/Test/menulibrary-1.1-RELEASE.jar");
 
         integration = new Integration(this);
 
