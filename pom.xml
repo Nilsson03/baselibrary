@@ -6,7 +6,7 @@
 
     <groupId>ru.nilsson03</groupId>
     <artifactId>baselibrary</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.1-UTILS</version>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
@@ -38,6 +38,12 @@
 
     <repositories>
 
+        <!-- WorldGuard/WorldEdit repo -->
+        <repository>
+            <id>sk89q-repo</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
+
         <!-- Mojang repo -->
         <repository>
             <id>minecraft-repo</id>
@@ -59,7 +65,16 @@
 
     <dependencies>
 
-        <!-- Mojang repo -->
+
+        <!-- WorldEdit 1.16.5 dependency -->
+        <dependency>
+            <groupId>com.sk89q.worldedit</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>7.2.9</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Mojang dependency -->
         <dependency>
             <groupId>com.mojang</groupId>
             <artifactId>authlib</artifactId>
