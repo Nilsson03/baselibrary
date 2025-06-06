@@ -6,6 +6,7 @@ import ru.nilsson03.library.bukkit.file.FileHelper;
 import ru.nilsson03.library.bukkit.util.Parameter;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,8 +59,43 @@ public class ParameterFile {
         return param != null ? param.getValueAs(type) : null;
     }
 
+    public <T> void setValue(String key, T value) {
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("Key cannot be null or empty");
+        }
+
+        String stringValue;
+
+        if (value instanceof List) {
+            stringValue = listToString((List<?>) value);
+        } else if (value != null) {
+            stringValue = value.toString();
+        } else {
+            stringValue = "null";
+        }
+
+        parameters.put(key, Parameter.fromString(stringValue));
+        fileConfiguration.set(key, stringValue);
+    }
+
+    private String listToString(List<?> list) {
+        return list.stream()
+                .map(Object::toString)
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
     public Parameter getParameterOrDefault(String key, String defaultValue) {
         return parameters.getOrDefault(key, Parameter.fromString(defaultValue));
+    }
+
+    public void save() {
+        try {
+            FileHelper.saveFile(fileConfiguration, plugin.getDataFolder().getPath(), fileName);
+            ConsoleLogger.debug(plugin, "Configuration file %s saved successfully", fileName);
+        } catch (Exception e) {
+            ConsoleLogger.error(plugin, "Failed to save configuration file %s: %s", fileName, e.getMessage());
+            throw new RuntimeException("Failed to save configuration file", e);
+        }
     }
 
     public NPlugin getPlugin() {
