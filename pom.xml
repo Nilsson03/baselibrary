@@ -6,7 +6,7 @@
 
     <groupId>ru.nilsson03</groupId>
     <artifactId>baselibrary</artifactId>
-    <version>1.2.1-UTILS</version>
+    <version>1.2.2-PARAMETHERS-UPDATE</version>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
