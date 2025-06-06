@@ -6,7 +6,6 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class Parameter {
 
@@ -70,13 +69,14 @@ public final class Parameter {
                 return targetType.cast(value.toString());
             } else if (targetType == List.class) {
                 if (value instanceof List) {
-                    return targetType.cast(value);
-                } else if (value instanceof String) {
-                    List<String> list = Arrays.stream(((String) value).split("\n"))
+                    String value = getValueAs(String.class);
+                    List<String> list = Arrays.stream(value.split("\n"))
                             .map(String::trim)
                             .filter(line -> !line.isEmpty())
-                            .collect(Collectors.toList());
+                            .toList();
                     return targetType.cast(list);
+                } else if (value instanceof String) {
+                    return targetType.cast(value);
                 } else {
                     return targetType.cast(Collections.singletonList(value.toString()));
                 }
