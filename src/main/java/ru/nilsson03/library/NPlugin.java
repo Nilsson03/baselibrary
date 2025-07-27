@@ -1,7 +1,10 @@
 package ru.nilsson03.library;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
+import ru.nilsson03.library.bukkit.file.BukkitDirectory;
 import ru.nilsson03.library.bukkit.file.FileRepository;
+import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.integration.PluginDependency;
 import ru.nilsson03.library.bukkit.notify.PlayerNotificationService;
@@ -9,6 +12,7 @@ import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public abstract class NPlugin extends JavaPlugin {
@@ -27,13 +31,13 @@ public abstract class NPlugin extends JavaPlugin {
                 throw new IllegalStateException("BaseLibrary not initialized");
             }
 
-            saveDefaultConfig();
             ConsoleLogger.register(this);
             integration = new Integration(this);
             fileRepository = new FileRepository(this);
             notificationService = new PlayerNotificationService();
             taskScheduler = new TaskScheduler(this);
             enable();
+            ConsoleLogger.info(this, "%s plugin loaded successfully.", getDescription().getName());
         } catch (Exception e) {
             ConsoleLogger.error(baseLibrary, "Failed to enable %s plugin, reason: %s", getDescription().getName(), e.getMessage());
             getServer().getPluginManager().disablePlugin(this);

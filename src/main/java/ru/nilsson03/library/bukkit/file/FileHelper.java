@@ -3,12 +3,12 @@ package ru.nilsson03.library.bukkit.file;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
+import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 
 public class FileHelper {
 
@@ -116,50 +116,36 @@ public class FileHelper {
      * Сохраняет конфигурацию в файл.
      *
      * @param fileConfiguration Конфигурация для сохранения.
-     * @param dataFolder        Директория для файла.
+     * @param directory        Директория для файла.
      * @param fileName          Имя файла.
      */
-    public static void saveFile(FileConfiguration fileConfiguration, String dataFolder, String fileName) {
+    public static void saveFile(FileConfiguration fileConfiguration, File directory, String fileName) {
         Objects.requireNonNull(fileConfiguration, "fileConfiguration cannot be null");
-        validatePathName(dataFolder);
+        Objects.requireNonNull(directory, "directory cannot be null");
         validateFileName(fileName);
 
-        Optional<File> directoryOptional;
         try {
-            directoryOptional = Optional.of(getOrCreateDirectory(dataFolder));
-        } catch (IOException exception) {
-            ConsoleLogger.warn("baselibrary", "Не удалось получить директорию %s по причине %s", dataFolder, exception);
-            directoryOptional = Optional.empty();
-        }
-
-        if (directoryOptional.isEmpty()) {
-            return;
-        }
-
-        File directory = directoryOptional.get();
-
-        File file = createFileOrLoad(directory, fileName);
-
-        try {
+            File file = new File(directory, fileName);
             fileConfiguration.save(file);
         } catch (IOException e) {
-            ConsoleLogger.warn("baselibrary", "Не удалось сохранить файл %s по причине %s", fileName, e.getMessage());
+            ConsoleLogger.warn("baselibrary", "Failed to save file %s due to %s.", fileName, e.getMessage());
         }
     }
 
     /**
      * Перезагружает конфигурацию из файла.
      *
-     * @param plugin   Плагин.
+     * @param nPlugin плагин
      * @return Перезагруженная FileConfiguration.
      */
-    public static FileConfiguration reloadFile(Plugin plugin, FileConfiguration configuration) {
-        Objects.requireNonNull(plugin, "plugin cannot be null");
+    public static FileConfiguration reloadFile(NPlugin nPlugin, FileConfiguration configuration) {
+        Objects.requireNonNull(nPlugin, "plugin cannot be null");
         Objects.requireNonNull(configuration, "configuration cannot be null");
 
         String fileName = configuration.getName();
-        saveFile(configuration, plugin.getDataFolder().getPath(), fileName);
-        return loadConfiguration(plugin, fileName);
+        saveFile(configuration, nPlugin.getDataFolder(), fileName);
+        ConsoleLogger.debug(nPlugin, "The file %s has been successfully reloaded.", fileName);
+        return loadConfiguration(nPlugin, fileName);
     }
 
     /**

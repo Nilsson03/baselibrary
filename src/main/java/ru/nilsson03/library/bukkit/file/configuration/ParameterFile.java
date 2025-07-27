@@ -90,7 +90,7 @@ public class ParameterFile {
 
     public void save() {
         try {
-            FileHelper.saveFile(fileConfiguration, plugin.getDataFolder().getPath(), fileName);
+            FileHelper.saveFile(fileConfiguration, plugin.getDataFolder(), fileName);
             ConsoleLogger.debug(plugin, "Configuration file %s saved successfully", fileName);
         } catch (Exception e) {
             ConsoleLogger.error(plugin, "Failed to save configuration file %s: %s", fileName, e.getMessage());
@@ -100,5 +100,9 @@ public class ParameterFile {
 
     public NPlugin getPlugin() {
         return plugin;
+    }
+
+    public FileConfiguration getFileConfiguration() {
+        return fileConfiguration;
     }
 }

@@ -6,7 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import ru.nilsson03.library.bukkit.item.builder.SkullItemBuilder;
 import ru.nilsson03.library.bukkit.item.skull.SkullTextureHandler;
-import ru.nilsson03.library.text.api.impl.UniversalTextApi;
+import ru.nilsson03.library.text.api.UniversalTextApi;
 
 import java.util.ArrayList;
 import java.util.List;

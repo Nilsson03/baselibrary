@@ -7,15 +7,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import ru.nilsson03.library.bukkit.item.builder.ItemBuilder;
-import ru.nilsson03.library.text.api.TextApi;
-import ru.nilsson03.library.text.api.TextApiFactory;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.text.api.UniversalTextApi;
 
 import java.util.*;
 import java.util.function.Consumer;
 
 public class SpigotItemBuilder implements ItemBuilder {
 
-    private static final TextApi TEXT_API = TextApiFactory.create();
     private static final Set<Material> LEATHER_ARMOR = EnumSet.of(
             Material.LEATHER_HELMET,
             Material.LEATHER_CHESTPLATE,
@@ -65,14 +64,15 @@ public class SpigotItemBuilder implements ItemBuilder {
     public ItemBuilder addLine(String line) {
         List<String> lore = Optional.ofNullable(itemMeta.getLore())
                 .orElse(new ArrayList<>());
-        lore.add(TEXT_API.colorize(line));
+        lore.add(UniversalTextApi.colorize(line));
         itemMeta.setLore(lore);
         return this;
     }
 
     @Override
     public ItemBuilder setLore(List<String> lines) {
-        itemMeta.setLore(TEXT_API.colorize(new ArrayList<>(lines)));
+        ConsoleLogger.debug("baselibrary", "Setting lore %s", lines);
+        itemMeta.setLore(UniversalTextApi.colorize(new ArrayList<>(lines)));
         return this;
     }
 
@@ -139,7 +139,8 @@ public class SpigotItemBuilder implements ItemBuilder {
 
     @Override
     public ItemBuilder setDisplayName(String name) {
-        itemMeta.setDisplayName(TEXT_API.colorize(name));
+        ConsoleLogger.debug("baselibrary","Setting displayName %s", name);
+        itemMeta.setDisplayName(UniversalTextApi.colorize(name));
         return this;
     }
 
@@ -182,6 +183,11 @@ public class SpigotItemBuilder implements ItemBuilder {
     @Override
     public ItemStack build() {
         itemStack.setItemMeta(itemMeta);
+        ConsoleLogger.debug("baselibrary", "Create ItemStack (name %s, lore %s, type %s, amount %s)",
+                itemMeta.getDisplayName(),
+                itemMeta.getLore(),
+                itemStack.getType().name(),
+                itemStack.getAmount());
         return itemStack.clone();
     }
 

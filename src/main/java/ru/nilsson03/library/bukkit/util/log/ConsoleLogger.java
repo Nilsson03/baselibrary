@@ -16,23 +16,24 @@ public final class ConsoleLogger {
     private static final Map<String, Logger> LOGGERS = new HashMap<>();
     private static final String DEFAULT_PREFIX = "§6System";
 
-    private static boolean debug = true;
-
     static {
         // Инициализация для системных сообщений
         PLUGIN_PREFIXES.put("system", DEFAULT_PREFIX);
     }
 
     public static void register(JavaPlugin plugin) {
-        PLUGIN_PREFIXES.put(plugin.getName().toLowerCase(), mainPrefixColor + plugin.getName());
+        String lowerPluginName = plugin.getName().toLowerCase();
+        PLUGIN_PREFIXES.put(lowerPluginName, mainPrefixColor + plugin.getName());
         Logger logger = new Logger(plugin);
         logger.initialize();
-        LOGGERS.put(plugin.getName(), logger);
+        LOGGERS.put(lowerPluginName, logger);
+        ConsoleLogger.info(plugin, "Success registered ConsoleLogger.");
     }
 
     public static void unregister(JavaPlugin plugin) {
-        PLUGIN_PREFIXES.remove(plugin.getName().toLowerCase());
-        Logger logger = LOGGERS.getOrDefault(plugin.getName(), null);
+        String lowerPluginName = plugin.getName().toLowerCase();
+        PLUGIN_PREFIXES.remove(lowerPluginName);
+        Logger logger = LOGGERS.getOrDefault(lowerPluginName, null);
         if (logger != null) {
             logger.close();
         }
@@ -55,9 +56,7 @@ public final class ConsoleLogger {
     }
 
     public static void debug(JavaPlugin plugin, String format, Object... args) {
-        if (debug) {
-            log(plugin, LogLevel.DEBUG, format, args);
-        }
+        log(plugin, LogLevel.DEBUG, format, args);
     }
 
     private static void log(JavaPlugin plugin, LogLevel level, String format, Object... args) {
@@ -86,6 +85,7 @@ public final class ConsoleLogger {
     }
 
     private static void log(String pluginName, LogLevel level, String format, Object... args) {
+        pluginName = pluginName.toLowerCase();
         String prefix = PLUGIN_PREFIXES.getOrDefault(
                 pluginName.toLowerCase(),
                 DEFAULT_PREFIX
@@ -97,22 +97,17 @@ public final class ConsoleLogger {
         String formatted = String.format("%s §8| %s §7%s",
                 prefix, icon, message);
 
-        Bukkit.getConsoleSender().sendMessage(formatted);
+        if (level != LogLevel.DEBUG)
+            Bukkit.getConsoleSender().sendMessage(formatted);
 
         if (level == LogLevel.ERROR || level == LogLevel.WARNING || level == LogLevel.DEBUG) {
             if (LOGGERS.containsKey(pluginName)) {
-                Logger logger = LOGGERS.getOrDefault(pluginName, null);
-                if (logger == null) {
-                    ConsoleLogger.warn(pluginName, "Couldn't get an instance of the Logger class to write a message to the event log.");
-                    return;
-                }
-
+                Logger logger = LOGGERS.get(pluginName);
                 logger.log(level, format, args);
+            } else {
+                Bukkit.getConsoleSender().sendMessage("Cant write message to file because Logger object is null for plugin " +
+                        pluginName + ".");
             }
         }
-    }
-
-    public static void debug(boolean b) {
-        debug = b;
     }
 }

@@ -58,15 +58,26 @@ public class BukkitConfig {
         return configuration;
     }
 
+    public void reloadConfiguration() {
+        var updatedConfiguration = FileHelper.reloadFile(getPlugin(), fileConfiguration);
+        updateFileConfiguration(updatedConfiguration);
+    }
+
     public void updateFileConfiguration(FileConfiguration fileConfiguration) {
         Objects.requireNonNull(fileConfiguration, "configuration cannot be null");
         this.fileConfiguration = fileConfiguration;
         configuration.load();
+        ConsoleLogger.debug(plugin, "File %s has been loaded (Class %s).",
+                file.getName(),
+                this.getClass().getName());
     }
 
     public void saveConfiguration() {
         try {
-            FileHelper.saveFile(fileConfiguration, plugin.getDataFolder().getAbsolutePath(), name);
+            FileHelper.saveFile(fileConfiguration, plugin.getDataFolder(), name);
+            ConsoleLogger.debug(plugin, "File %s successfully saved (Class %s).",
+                    name,
+                    this.getClass().getName());
         } catch (Exception exception) {
             plugin.getLogger().warning("Failed to save configuration " + name + " for plugin " + plugin.getName() + " error: " + exception.getMessage());
             throw new RuntimeException("Failed to save configuration " + name + " for plugin " + plugin.getName(), exception);

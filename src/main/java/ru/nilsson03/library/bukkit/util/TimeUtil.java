@@ -7,9 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public final class TimeUtil {
 
@@ -88,7 +86,8 @@ public final class TimeUtil {
         appendTimeUnit(sb, hours, TimeUnit.HOURS);
         appendTimeUnit(sb, minutes, TimeUnit.MINUTES);
 
-        if (seconds > 0 || sb.length() == 0) {
+        if (seconds > 0) {
+            if (sb.length() > 0) sb.append(", ");
             sb.append(seconds).append(" ").append(getTimeUnitName(seconds, TimeUnit.SECONDS));
         } else if (sb.length() > 0) {
             sb.setLength(sb.length() - 2); // Удаляем последнюю ", "
@@ -225,14 +224,35 @@ public final class TimeUtil {
      * @param timeUnit единица времени
      * @return строковое представление единицы времени в правильной форме
      */
-    private static String getTimeUnitName(long value, TimeUnit timeUnit) {
-        if (value % 10 == 1 && value % 100 != 11) {
-            return timeUnit.getOne();
-        } else if (value % 10 >= 2 && value % 10 <= 4 && (value % 100 < 10 || value % 100 >= 20)) {
-            return timeUnit.getTwo();
-        } else {
-            return timeUnit.getThree();
+    private static String getTimeUnitName(long value, TimeUnit unit) {
+        switch (unit) {
+            case SECONDS:
+                return getCorrectForm(value, "секунда", "секунды", "секунд");
+            case MINUTES:
+                return getCorrectForm(value, "минута", "минуты", "минут");
+            case HOURS:
+                return getCorrectForm(value, "час", "часа", "часов");
+            case DAYS:
+                return getCorrectForm(value, "день", "дня", "дней");
+            case WEEKS:
+                return getCorrectForm(value, "неделя", "недели", "недель");
+            case MONTHS:
+                return getCorrectForm(value, "месяц", "месяца", "месяцев");
+            case YEARS:
+                return getCorrectForm(value, "год", "года", "лет");
+            default:
+                return "";
         }
+    }
+    
+    private static String getCorrectForm(long number, String form1, String form2, String form5) {
+        long n = Math.abs(number) % 100;
+        long n1 = n % 10;
+        
+        if (n > 10 && n < 20) return form5;
+        if (n1 == 1) return form1;
+        if (n1 >= 2 && n1 <= 4) return form2;
+        return form5;
     }
 
     /**

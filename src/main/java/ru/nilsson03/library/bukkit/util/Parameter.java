@@ -3,6 +3,7 @@ package ru.nilsson03.library.bukkit.util;
 import org.bukkit.configuration.ConfigurationSection;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -68,18 +69,15 @@ public final class Parameter {
             } else if (targetType == String.class) {
                 return targetType.cast(value.toString());
             } else if (targetType == List.class) {
-                if (value instanceof List) {
                     String value = getValueAs(String.class);
-                    List<String> list = Arrays.stream(value.split("\n"))
-                            .map(String::trim)
-                            .filter(line -> !line.isEmpty())
-                            .toList();
+                    if (value.startsWith("[")) {
+                        value = value.substring(1);
+                    }
+                    if (value.endsWith("]")) {
+                        value = value.substring(0, value.length() - 1);
+                    }
+                    List<String> list = new ArrayList<>(Arrays.asList(value.split(", ")));
                     return targetType.cast(list);
-                } else if (value instanceof String) {
-                    return targetType.cast(value);
-                } else {
-                    return targetType.cast(Collections.singletonList(value.toString()));
-                }
             } else if (targetType == ConfigurationSection.class) {
                 if (value instanceof ConfigurationSection) {
                     return targetType.cast(value);
@@ -144,6 +142,10 @@ public final class Parameter {
                 value instanceof List;
     }
 
+    private static Parameter fromEmptyString() {
+        return new Parameter("");
+    }
+
     /**
      * Создает параметр из строки с автоматическим определением типа.
      *
@@ -151,8 +153,12 @@ public final class Parameter {
      * @return Новый экземпляр Parameter.
      */
     public static Parameter fromString(String value) {
-        if (value == null || value.isEmpty()) {
+        if (value == null) {
             throw new IllegalArgumentException("Value cannot be null or empty");
+        }
+
+        if (value.isEmpty()) {
+            return fromEmptyString();
         }
 
         try {

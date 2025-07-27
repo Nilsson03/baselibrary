@@ -11,14 +11,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Репозиторий для управления конфигурационными файлами плагина.
- * Обеспечивает загрузку, сохранение и перезагрузку YAML-конфигураций.
- */
 public class FileRepository {
-
     private static final Map<NPlugin, FileRepository> initializationMap = new ConcurrentHashMap<>();
-
     private final NPlugin plugin;
     private final Map<String, BukkitDirectory> directories;
     private final List<String> excludedFilesFromParsing;
@@ -34,34 +28,20 @@ public class FileRepository {
         return initializationMap.getOrDefault(plugin, new FileRepository(plugin));
     }
 
-    public void addExcludedFiles(String... fileNames) {
-        excludedFilesFromParsing.addAll(Arrays.asList(fileNames));
-    }
-
-    public void addExcludedDirectories(String... directoryNames) {
-        excludedDirectoryFromParsing.addAll(Arrays.asList(directoryNames));
-    }
-
     public FileRepository(NPlugin plugin) {
-
         if (initializationMap.containsKey(plugin)) {
-            ConsoleLogger.debug(plugin, "Failed to initialize FileRepository for %s plugin because a repository has already been created for it", plugin.getName());
-            throw new IllegalStateException("Failed to initialize FileRepository for " + plugin.getName() + " plugin because a repository has already been created for it");
+            ConsoleLogger.debug(plugin, "FileRepository already exists for %s", plugin.getName());
+            throw new IllegalStateException("FileRepository already exists for " + plugin.getName());
         }
-
         this.plugin = plugin;
-
         initializationMap.put(plugin, this);
     }
 
     public Optional<BukkitDirectory> getDirectoryOrLoad(String directoryName) {
-        if (directories.containsKey(directoryName))
+        if (directories.containsKey(directoryName)) {
             return Optional.of(directories.get(directoryName));
-        else {
-            Optional<BukkitDirectory> optionalBukkitDirectory = load(directoryName);
-            optionalBukkitDirectory.ifPresent(bukkitDirectory -> directories.put(directoryName, bukkitDirectory));
-            return optionalBukkitDirectory;
         }
+        return load(directoryName);
     }
 
     public Optional<BukkitDirectory> load(String directory) {
@@ -73,94 +53,66 @@ public class FileRepository {
         }
 
         if (directories.containsKey(directory)) {
-            ConsoleLogger.warn(plugin, "The %s directory has already been added to the repository, I'm skipping it.", directory);
+            ConsoleLogger.warn(plugin, "Directory %s already loaded", directory);
             return Optional.empty();
         }
 
         String normalizePath = plugin.getDataFolder().getPath() + File.separator + directory;
-
         File directoryFile;
         try {
             directoryFile = FileHelper.getOrCreateDirectory(normalizePath);
-        } catch (IOException exception) {
-            ConsoleLogger.error(plugin, "Couldn't get or create a directory with a path: %s", normalizePath);
-            throw new RuntimeException("Couldn't get or create a directory with a path: " + normalizePath + " : " + exception.getMessage());
+        } catch (IOException e) {
+            ConsoleLogger.error(plugin, "Couldn't create directory %s: %s", normalizePath, e.getMessage());
+            return Optional.empty();
         }
 
-        Map<String, BukkitConfig> listOfFiles = loadFilesRecursively(directoryFile, "");
-        BukkitDirectory bukkitDirectory = BukkitDirectory.of(plugin, directoryFile, listOfFiles);
-        directories.put(normalizePath, bukkitDirectory);
+        Map<String, BukkitConfig> files = loadFiles(directoryFile);
+        BukkitDirectory bukkitDirectory = BukkitDirectory.of(plugin, directoryFile, files);
+        directories.put(directory, bukkitDirectory);
         return Optional.of(bukkitDirectory);
     }
 
-    private boolean shouldSkipContentParsing(File file) {
-        return excludedFilesFromParsing.contains(file.getName());
-    }
-
-    private boolean shouldSkipDirectory(String directoryName) {
-        return excludedDirectoryFromParsing.contains(directoryName);
-    }
-
-    protected Map<String, BukkitConfig> loadFilesRecursively(File dir, String relativePath) {
+    private Map<String, BukkitConfig> loadFiles(File dir) {
         Map<String, BukkitConfig> result = new HashMap<>();
-        String currentRelativePath = relativePath != null ? relativePath : "";
-        for (File file : Objects.requireNonNull(dir.listFiles())) {
-            if (file.isDirectory()) {
-                String normalizePath = currentRelativePath + file.getName() + File.separator;
-                result.putAll(loadFilesRecursively(file, normalizePath));
-            } else if (file.getName().endsWith(".yml")) {
-                String name = file.getName().substring(0, file.getName().lastIndexOf('.'));
-                boolean skipParsing = shouldSkipContentParsing(file);
+        File[] directoryFiles = dir.listFiles();
+        if (directoryFiles == null) return result;
 
-                if (skipParsing) {
+        for (File file : directoryFiles) {
+            if (file.isFile() && file.getName().endsWith(".yml")) {
+                String name = file.getName();
+                if (shouldSkipContentParsing(file)) {
                     ConsoleLogger.debug(plugin, "Skipping load of %s", name);
                     continue;
                 }
-
                 if (isFileExistsInAnyDirectory(name)) {
-                    ConsoleLogger.warn(plugin, "Duplicate config file name %s found in %s", name, file.getParent());
+                    ConsoleLogger.warn(plugin, "Duplicate config %s found", name);
                     continue;
                 }
-
                 result.put(name, new BukkitConfig(plugin, name));
             }
         }
         return result;
     }
 
-    public Optional<BukkitConfig> getByName(BukkitDirectory directory, String fileName) {
-        String dirPath =  directory.getPath();
-
-        if (!directories.containsKey(dirPath)) {
-            ConsoleLogger.debug(plugin, "Couldn't find %s directory in cache", dirPath);
-            return Optional.empty();
-        }
-
-        return directories.get(fileName)
-                .getConfig(fileName);
-    }
-
     public Optional<BukkitConfig> create(BukkitDirectory directory, String fileName) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
-        Preconditions.checkArgument(fileName != null && !fileName.isEmpty(), "fileName cannot be null or empty");
+        Preconditions.checkArgument(fileName != null && !fileName.isEmpty(), "fileName cannot be empty");
 
         String dirPath = directory.getPath();
-
         if (!directories.containsKey(dirPath)) {
-            ConsoleLogger.warn(plugin, "Directory %s not found in cache!", dirPath);
+            ConsoleLogger.warn(plugin, "Directory %s not found", dirPath);
             return Optional.empty();
         }
 
         if (isFileExistsInAnyDirectory(fileName)) {
-            ConsoleLogger.warn(plugin, "File %s already exists in another directory!", fileName);
+            ConsoleLogger.warn(plugin, "File %s already exists", fileName);
             return Optional.empty();
         }
 
         BukkitConfig bukkitConfig = new BukkitConfig(plugin, fileName);
-
         try {
             if (bukkitConfig.getFile().exists()) {
-                ConsoleLogger.warn(plugin, "File %s already exists on disk!", fileName);
+                ConsoleLogger.warn(plugin, "File %s exists on disk", fileName);
                 return Optional.empty();
             }
 
@@ -173,23 +125,33 @@ public class FileRepository {
         }
     }
 
-    public List<BukkitConfig> getAllFromDirectory(BukkitDirectory directory) {
-        Objects.requireNonNull(directory, "Directory cant be null");
+    private boolean shouldSkipContentParsing(File file) {
+        return excludedFilesFromParsing.contains(file.getName());
+    }
 
-        String dirPath = directory.getPath();
-
-        if (!directories.containsKey(dirPath)) {
-            ConsoleLogger.warn(plugin, "It is impossible to get a list of configuration files from the %s directory because it has not been added to the cache!", directory);
-            return Collections.emptyList();
-        }
-
-        BukkitDirectory bukkitDirectory = directories.get(dirPath);
-        return bukkitDirectory.getCached();
+    private boolean shouldSkipDirectory(String directoryName) {
+        return excludedDirectoryFromParsing.contains(directoryName);
     }
 
     private boolean isFileExistsInAnyDirectory(String fileName) {
-        return directories.values()
-                .stream()
+        return directories.values().stream()
                 .anyMatch(dir -> dir.containsFileWithName(fileName));
+    }
+
+    public void addExcludedFiles(String... fileNames) {
+        excludedFilesFromParsing.addAll(Arrays.asList(fileNames));
+    }
+
+    public void addExcludedDirectories(String... directoryNames) {
+        excludedDirectoryFromParsing.addAll(Arrays.asList(directoryNames));
+    }
+
+    public Optional<BukkitConfig> getByName(BukkitDirectory directory, String fileName) {
+        String dirPath = directory.getPath();
+        if (!directories.containsKey(dirPath)) {
+            ConsoleLogger.debug(plugin, "Directory %s not in cache", dirPath);
+            return Optional.empty();
+        }
+        return directories.get(dirPath).getConfig(fileName);
     }
 }

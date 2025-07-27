@@ -16,7 +16,7 @@ public class SkullHandlerFactory {
         String core = ServerVersionUtils.CORE;
         ServerVersion version = ServerVersionUtils.getServerVersion();
 
-        if (core.equalsIgnoreCase("Paper")) {
+        if (core.equalsIgnoreCase("Paper") || core.equalsIgnoreCase("Purpur")) {
             return new PaperSkullTextureHandler();
         } else if (core.equalsIgnoreCase("Spigot")) {
             if (version.isOlderOrEqual(ServerVersion.v1_19)) {

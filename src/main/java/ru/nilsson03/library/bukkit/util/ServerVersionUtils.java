@@ -13,7 +13,7 @@ public class ServerVersionUtils {
     public static final String CORE;
 
     static {
-        NMS_VERSION = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+        NMS_VERSION = getNMSVersion();
         BUKKIT_VERSION = Bukkit.getBukkitVersion().split("-")[0];
         CURRENT_VERSION = detectServerVersion();
         CORE = Bukkit.getName();
@@ -25,6 +25,31 @@ public class ServerVersionUtils {
      */
     public static ServerVersion getServerVersion() {
         return CURRENT_VERSION;
+    }
+
+    private static String getNMSVersion() {
+        String packageName = Bukkit.getServer().getClass().getPackage().getName();
+        String[] packageParts = packageName.split("\\.");
+
+        if (packageParts.length > 3) {
+            return packageParts[3];
+        }
+
+        String serverVersion = Bukkit.getServer().getVersion();
+        String mcVersion;
+        if (serverVersion.contains("(MC: ")) {
+            mcVersion = serverVersion.split("\\(MC: ")[1].split("\\)")[0];
+        } else if (serverVersion.contains("-")) {
+            mcVersion = serverVersion.split("-")[1].split(" ")[0];
+        } else {
+            mcVersion = "1.21.5"; // fallback
+        }
+
+        String[] versionParts = mcVersion.split("\\.");
+        String major = versionParts[0];
+        String minor = versionParts[1];
+
+        return "v" + major + "_" + minor + "_R1";
     }
 
     /**

@@ -1,13 +1,15 @@
 package ru.nilsson03.library.text.messeger;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import ru.nilsson03.library.bukkit.bar.UniversalActionBar;
-import ru.nilsson03.library.bukkit.util.SoundUtils;
-import ru.nilsson03.library.text.api.impl.UniversalTextApi;
-
 import java.util.List;
 import java.util.regex.Pattern;
+
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import ru.nilsson03.library.bukkit.bar.UniversalActionBar;
+import ru.nilsson03.library.bukkit.util.SoundUtils;
+import ru.nilsson03.library.text.api.UniversalTextApi;
+import ru.nilsson03.library.text.util.ChatFormatter;
 
 public class UniversalMessenger {
     private static final Pattern SOUND_PATTERN = Pattern.compile("^sound:(.+)$");
@@ -37,6 +39,7 @@ public class UniversalMessenger {
             } else if (ACTIONBAR_PATTERN.matcher(part).matches()) {
                 handleActionBar(player, part.substring(10));
             } else if (!part.trim().isEmpty()) {
+                part = ChatFormatter.centerText(part);
                 player.sendMessage(UniversalTextApi.colorize(part));
             }
         }

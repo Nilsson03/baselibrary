@@ -3,16 +3,13 @@ package ru.nilsson03.library.bukkit.file.configuration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
-import ru.nilsson03.library.text.api.TextApi;
-import ru.nilsson03.library.text.api.TextApiFactory;
+import ru.nilsson03.library.text.api.UniversalTextApi;
 import ru.nilsson03.library.text.util.ReplaceData;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ConfigOperations {
-
-    private final TextApi textApi = TextApiFactory.create();
 
     private final Map<String, String> map;
 
@@ -126,7 +123,7 @@ public class ConfigOperations {
                 })
                 .filter(line -> !line.isEmpty())
                 .map(line -> applyReplaces(line, replacesData))
-                .map(textApi::colorize)
+                .map(UniversalTextApi::colorize)
                 .collect(Collectors.toList());
     }
 
@@ -138,11 +135,11 @@ public class ConfigOperations {
         String value = map.getOrDefault(path, null);
         if (value == null) {
             ConsoleLogger.warn("baselibrary", "Could not parse string value for path: " + path + ". Returning default value.");
-            return defValue != null ? textApi.colorize(defValue) : "";
+            return defValue != null ? UniversalTextApi.colorize(defValue) : "";
         }
 
         String processedValue = applyReplaces(value, replacesData);
-        return textApi.colorize(processedValue);
+        return UniversalTextApi.colorize(processedValue);
     }
 
     private String applyReplaces(String text, ReplaceData... replacesData) {

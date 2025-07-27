@@ -6,7 +6,9 @@ import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
+import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class BukkitDirectory {
@@ -31,7 +33,7 @@ public class BukkitDirectory {
         return new BukkitDirectory(plugin, directory, listOfFiles);
     }
 
-    public void removeAndDeleteConfig(String fileName) {
+    private void removeAndDeleteConfig(String fileName) {
         if (!containsFileWithName(fileName))
             return;
 
@@ -82,14 +84,38 @@ public class BukkitDirectory {
             return;
         }
 
-        Optional<BukkitConfig> configOptional = getConfig(fileName);
-        BukkitConfig bukkitConfig = configOptional.get();
-        FileConfiguration configuration = FileHelper.reloadFile(bukkitConfig.getPlugin(), bukkitConfig.getFileConfiguration());
-        bukkitConfig.updateFileConfiguration(configuration);
+        BukkitConfig config = getBukkitConfig(fileName);
+        if (config != null) {
+            config.reloadConfiguration();
+        }
     }
 
+    /**
+     * Получает BukkitConfig из кэша файлов директории,
+     * затем создаёт обёртку Optional и возвращает результат.
+     * @param fileName название файла из директории
+     * @return файл в обёртке Optional
+     *
+     * @see BukkitConfig
+     */
+    @Deprecated(since = "1.2.2")
     public Optional<BukkitConfig> getConfig(String fileName) {
         return Optional.ofNullable(this.cached.get(fileName));
+    }
+
+    /**
+     * Получает BukkitConfig из кэша файлов директории,
+     * @param fileName название файла из директории
+     * @return файл
+     */
+    @Nullable
+    public BukkitConfig getBukkitConfig(String fileName) {
+        try {
+            return cached.get(fileName);
+        } catch (NullPointerException e) {
+            ConsoleLogger.warn(plugin, "The config file %s was not found in the %s directory!", fileName, directoryName);
+            return null;
+        }
     }
 
     public List<BukkitConfig> getCached() {

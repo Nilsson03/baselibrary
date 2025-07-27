@@ -15,6 +15,7 @@ import java.util.Optional;
 public class LocationUtil {
 
     private static final double HEIGHT_INCREASE_PER_LINE = 0.2;
+    private static final double BASE_HEIGHT = 1.5;
 
     public static Location[] getCorners(Location one, Location two) {
 
@@ -43,13 +44,13 @@ public class LocationUtil {
         return res;
     }
 
-    public static Location updateHologramHeight(Location location, List<String> lines, double baseHeight) {
+    public static Location updateHologramHeight(Location location, List<String> lines) {
         int lineCount = lines.size();
-        double newHeight = location.getY() + baseHeight + lineCount * HEIGHT_INCREASE_PER_LINE;
+        double newHeight = location.getY() + BASE_HEIGHT + lineCount * HEIGHT_INCREASE_PER_LINE;
         Location newLocation = location.clone();
         newLocation.setY(newHeight);
-        newLocation.setX(location.getX() + 0.5);
-        newLocation.setZ(location.getZ() + 0.5);
+        newLocation.setX(location.getX());
+        newLocation.setZ(location.getZ());
         return newLocation;
     }
 
