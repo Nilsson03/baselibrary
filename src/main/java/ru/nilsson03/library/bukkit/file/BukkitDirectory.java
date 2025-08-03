@@ -15,6 +15,7 @@ public class BukkitDirectory {
 
     private final String directoryName;
     private final String path;
+    private final File file;
     private final Map<String, BukkitConfig> cached = new HashMap<>();
 
     private final NPlugin plugin;
@@ -22,6 +23,7 @@ public class BukkitDirectory {
     protected BukkitDirectory(NPlugin plugin, File directory, Map<String, BukkitConfig> listOfFiles) {
         this.plugin = plugin;
         this.path = directory.getPath();
+        this.file = directory;
         this.directoryName = directory.getName();
         cached.putAll(listOfFiles);
     }
@@ -124,5 +126,9 @@ public class BukkitDirectory {
 
     public String getPath() {
         return path;
+    }
+
+    public File getFile() {
+        return file;
     }
 }
