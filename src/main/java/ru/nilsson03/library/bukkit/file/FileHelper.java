@@ -8,7 +8,9 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class FileHelper {
 
@@ -30,6 +32,19 @@ public class FileHelper {
             plugin.saveResource(fileName, false);
         }
         return YamlConfiguration.loadConfiguration(file);
+    }
+
+    public static Set<FileConfiguration> loadConfigurations(NPlugin plugin, File dataFolder, String... fileName) {
+        Objects.requireNonNull(plugin, "plugin cannot be null");
+        Objects.requireNonNull(dataFolder, "dataFolder cannot be null");
+
+        Set<FileConfiguration> fileConfigurations = new HashSet<>();
+
+        for (String string : fileName) {
+            fileConfigurations.add(loadConfiguration(plugin, dataFolder, string));
+        }
+
+        return fileConfigurations;
     }
 
     /**
