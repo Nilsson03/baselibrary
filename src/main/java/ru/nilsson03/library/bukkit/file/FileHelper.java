@@ -8,6 +8,8 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -22,16 +24,41 @@ public class FileHelper {
      * @param fileName  Имя файла.
      * @return Загруженная FileConfiguration.
      */
-    public static FileConfiguration loadConfiguration(Plugin plugin, File dataFolder, String fileName) {
+    public static FileConfiguration loadConfiguration(NPlugin plugin, File dataFolder, String fileName) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
         Objects.requireNonNull(dataFolder, "dataFolder cannot be null");
         validateFileName(fileName);
 
-        File file = new File(dataFolder, fileName);
-        if (!file.exists()) {
-            plugin.saveResource(fileName, false);
+        String resourcePath = dataFolder.getName() + "/" + fileName;
+        File dir = new File(plugin.getDataFolder(), dataFolder.getName());
+        File configFile = new File(dir, fileName);
+
+        if (!dir.exists()) {
+            dir.mkdirs();
         }
-        return YamlConfiguration.loadConfiguration(file);
+
+        if (!configFile.exists()) {
+            try (InputStream input = plugin.getResource(resourcePath)) {
+                if (input == null) {
+                    ConsoleLogger.warn(plugin, "File %s not found in JAR plugin with path %s.",
+                            fileName,
+                            resourcePath);
+                    if (!configFile.createNewFile()) {
+                        ConsoleLogger.error(plugin, "Failed to create empty file %s.",
+                                fileName);
+                        throw new IOException("Failed to create empty file.");
+                    }
+                } else {
+                    Files.copy(input, configFile.toPath());
+                }
+            } catch (IOException e) {
+                ConsoleLogger.error(plugin, "Error %s while copying configuration file %s.",
+                        e.getMessage(),
+                        fileName);
+            }
+        }
+
+        return YamlConfiguration.loadConfiguration(configFile);
     }
 
     public static Set<FileConfiguration> loadConfigurations(NPlugin plugin, File dataFolder, String... fileName) {
@@ -54,7 +81,7 @@ public class FileHelper {
      * @param fileName Имя файла.
      * @return Загруженная FileConfiguration.
      */
-    public static FileConfiguration loadConfiguration(Plugin plugin, String fileName) {
+    public static FileConfiguration loadConfiguration(NPlugin plugin, String fileName) {
         return loadConfiguration(plugin, plugin.getDataFolder(), fileName);
     }
 
@@ -64,7 +91,7 @@ public class FileHelper {
      * @param plugin    Плагин.
      * @param fileNames Имена файлов.
      */
-    public static void loadConfigurations(Plugin plugin, String... fileNames) {
+    public static void loadConfigurations(NPlugin plugin, String... fileNames) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
         Objects.requireNonNull(fileNames, "fileNames cannot be null");
 
