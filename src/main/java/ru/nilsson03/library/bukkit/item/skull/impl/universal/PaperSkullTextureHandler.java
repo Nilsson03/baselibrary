@@ -6,35 +6,49 @@ import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
+import java.util.UUID;
 
 public class PaperSkullTextureHandler extends AbstractSkullTextureHandler {
 
-    private static final String PROFILE_CLASS_PATH = "org.bukkit.craftbukkit.%s.CraftProfile";
-    private static final String TEXTURES_METHOD = "setTextures";
-    private static final String PROFILE_FIELD = "profile";
+    private static final Class<?> bukkit;
+    private static final Class<?> profilePropertyСlass;
+    private static final Method createProfile;
+    private static final Class<?> playerProfileClass;
+    private static final Method setPlayerProfile;
+    private static final Method setProperty;
+    private static final Method getPlayerProfile;
+    private static final Method getProperties;
+
+    static {
+        try {
+            bukkit = Class.forName("org.bukkit.Bukkit");
+            playerProfileClass = Class.forName("com.destroystokyo.paper.profile.PlayerProfile");
+            profilePropertyСlass = Class.forName("com.destroystokyo.paper.profile.ProfileProperty");
+            Class<?> skullMeta = SkullMeta.class;
+
+            createProfile = bukkit.getMethod("createProfile", UUID.class, String.class);
+            setPlayerProfile = skullMeta.getMethod("setPlayerProfile", playerProfileClass);
+            setProperty = playerProfileClass.getMethod("setProperty", profilePropertyСlass);
+            getPlayerProfile = skullMeta.getMethod("getPlayerProfile");
+            getProperties = playerProfileClass.getMethod("getProperties");
+
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
-    public void applyTexture(SkullMeta skullMeta, String textureUrl) {
-        validateInput(skullMeta, textureUrl);
-
+    public void applyTexture(SkullMeta skullMeta, String texture) {
         try {
-            URL url = validateAndCreateUrl(textureUrl);
-            Class<?> profileClass = Class.forName(String.format(PROFILE_CLASS_PATH, ServerVersionUtils.NMS_VERSION));
-
-            Object profile = profileClass.getConstructor().newInstance();
-            Method setTexturesMethod = profileClass.getDeclaredMethod(TEXTURES_METHOD, URL.class);
-            setTexturesMethod.setAccessible(true);
-            setTexturesMethod.invoke(profile, url);
-
-            Field profileField = skullMeta.getClass().getDeclaredField(PROFILE_FIELD);
-            profileField.setAccessible(true);
-            profileField.set(skullMeta, profile);
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("Invalid texture URL format", e);
-        } catch (Exception e) {
+            Object playerProfileObject = createProfile.invoke(null, UUID.randomUUID(), "Steve");
+            setProperty.invoke(playerProfileObject, profilePropertyСlass.getConstructor(String.class, String.class).newInstance("textures", texture));
+            setPlayerProfile.invoke(skullMeta, playerProfileObject);
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchMethodException e) {
             ConsoleLogger.error("baselibrary", "Failed to apply texture to skull, reason: ", e.getMessage());
             throw new RuntimeException("Failed to process skull texture", e);
         }
@@ -43,18 +57,25 @@ public class PaperSkullTextureHandler extends AbstractSkullTextureHandler {
     @Override
     public String getTexture(SkullMeta skullMeta) {
         try {
-            Field profileField = skullMeta.getClass().getDeclaredField(PROFILE_FIELD);
-            profileField.setAccessible(true);
-            Object profile = profileField.get(skullMeta);
+            Object playerProfileObject = getPlayerProfile.invoke(skullMeta);
+            if (playerProfileObject != null) {
+                Collection<?> properties = (Collection<?>) getProperties.invoke(playerProfileObject);
 
-            Method getTexturesMethod = profile.getClass().getDeclaredMethod(TEXTURES_METHOD);
-            getTexturesMethod.setAccessible(true);
-            URL textureUrl = (URL) getTexturesMethod.invoke(profile);
+                for (Object property : properties) {
+                    Method getNameMethod = property.getClass().getDeclaredMethod("getName");
+                    String name = (String) getNameMethod.invoke(property);
 
-            return textureUrl != null ? textureUrl.toString() : null;
-        } catch (Exception e) {
+                    if ("textures".equals(name)) {
+                        Method getValueMethod = property.getClass().getDeclaredMethod("getValue");
+                        return (String) getValueMethod.invoke(property);
+                    }
+                }
+            } else {
+                return "Default Minecraft Head"; // if player profile is null
+            }
+        } catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             ConsoleLogger.error("baselibrary", "Failed to retrieve texture from skull, reason: ", e.getMessage());
-            return null;
         }
+        return null;
     }
 }
