@@ -66,7 +66,7 @@ public class ItemUtil {
     public static ItemStack createItem(BukkitConfig config,
                                        String path,
                                        ReplaceData... replaceData) {
-        ConfigOperations configOperations = config.getFileOperations();
+        ConfigOperations configOperations = config.operations();
         String type = configOperations.getString(path + ".type", "material");
         String displayName = UniversalTextApi.colorize(configOperations.getString(path + ".name", replaceData));
         List<String> lore = UniversalTextApi.colorize(configOperations.getList(path + ".lore", replaceData));
