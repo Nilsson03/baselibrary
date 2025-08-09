@@ -16,7 +16,7 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
     private final String fileName;
     private final Map<String, String> fileContent;
     private final FileConfiguration bukkitConfiguration;
-    private final ConfigOperations fileOperations;
+    private final ConfigOperations configOperations;
 
     public BukkitConfigurationImpl(NPlugin plugin, String fileName, FileConfiguration bundleConfiguration) throws NullPointerException {
         if (plugin == null) {
@@ -38,7 +38,7 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
 
         try {
             load();
-            this.fileOperations = new ConfigOperations(fileContent);
+            this.configOperations = new ConfigOperations(fileContent);
         } catch (ClassCastException e) {
             ConsoleLogger.warn(plugin,
                     "YAML configuration file %s contains format errors: %s",
@@ -59,8 +59,8 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
         return fileName;
     }
 
-    public ConfigOperations getFileOperations() {
-        return fileOperations;
+    public ConfigOperations operations() {
+        return configOperations;
     }
 
     public NPlugin getPlugin() {

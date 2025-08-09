@@ -72,12 +72,12 @@ public interface BukkitConfiguration {
     }
 
     /**
-     * Возвращает объект FileOperations, который предоставляет операции для работы с содержимым файла.
+     * Возвращает объект ConfigOperations, который предоставляет операции для работы с содержимым файла.
      * Использует Map, возвращаемый методом getFileContent(), для инициализации.
      *
-     * @return Объект FileOperations для работы с содержимым файла.
+     * @return Объект ConfigOperations для работы с содержимым файла.
      */
-    ConfigOperations getFileOperations();
+    ConfigOperations operations();
 
     /**
      * Возвращает объект Plugin, связанный с текущей конфигурацией.

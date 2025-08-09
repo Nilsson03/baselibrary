@@ -120,10 +120,10 @@ public class BukkitConfig {
         return new FileInputStream(file);
     }
 
-    public ConfigOperations getFileOperations() throws NullPointerException {
+    public ConfigOperations operations() throws NullPointerException {
         Objects.requireNonNull(configuration, "Configuration cannot be null");
 
-        return getBukkitConfiguration().getFileOperations();
+        return getBukkitConfiguration().operations();
     }
 
     public void delete() {
