@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -24,37 +25,37 @@ public class FileHelper {
      * @param fileName  Имя файла.
      * @return Загруженная FileConfiguration.
      */
-    public static FileConfiguration loadConfiguration(NPlugin plugin, File dataFolder, String fileName) {
+    public static FileConfiguration loadConfiguration(NPlugin plugin, File dataFolder, String jarResourcePath) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
         Objects.requireNonNull(dataFolder, "dataFolder cannot be null");
-        validateFileName(fileName);
+        validateFileName(jarResourcePath);
 
-        String resourcePath = dataFolder.getName() + "/" + fileName;
-        File dir = new File(plugin.getDataFolder(), dataFolder.getName());
-        File configFile = new File(dir, fileName);
-
-        if (!dir.exists()) {
-            dir.mkdirs();
+        File configFile;
+        if (jarResourcePath.contains("/")) {
+            String fileName = jarResourcePath.substring(jarResourcePath.lastIndexOf('/') + 1);
+            String subDirs = jarResourcePath.substring(0, jarResourcePath.lastIndexOf('/'));
+            File targetDir = new File(dataFolder, subDirs);
+            configFile = new File(targetDir, fileName);
+        } else {
+            configFile = new File(dataFolder, jarResourcePath);
         }
 
-        if (!configFile.exists()) {
-            try (InputStream input = plugin.getResource(resourcePath)) {
-                if (input == null) {
-                    ConsoleLogger.warn(plugin, "File %s not found in JAR plugin with path %s.",
-                            fileName,
-                            resourcePath);
-                    if (!configFile.createNewFile()) {
-                        ConsoleLogger.error(plugin, "Failed to create empty file %s.",
-                                fileName);
-                        throw new IOException("Failed to create empty file.");
-                    }
-                } else {
+        if (!configFile.getParentFile().exists() && !configFile.getParentFile().mkdirs()) {
+            throw new IllegalStateException("Failed to create directory: " + configFile.getParent());
+        }
+
+        if (!configFile.exists() || configFile.length() == 0) {
+            try (InputStream input = plugin.getResource(jarResourcePath)) {
+                if (input != null) {
                     Files.copy(input, configFile.toPath());
+                    ConsoleLogger.info(plugin, "Successfully copied default config: %s", configFile.getPath());
+                } else {
+                    if (configFile.createNewFile()) {
+                        ConsoleLogger.info(plugin, "Created EMPTY config file: %s", configFile.getPath());
+                    }
                 }
             } catch (IOException e) {
-                ConsoleLogger.error(plugin, "Error %s while copying configuration file %s.",
-                        e.getMessage(),
-                        fileName);
+                throw new IllegalStateException("Failed to initialize config: " + jarResourcePath, e);
             }
         }
 
