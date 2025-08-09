@@ -39,29 +39,25 @@ public class SpigotItemBuilder implements ItemBuilder {
                 .orElse(Bukkit.getItemFactory().getItemMeta(itemStack.getType()));
     }
 
-    @Override
-    public ItemBuilder update(ItemStack itemStack) {
+    public SpigotItemBuilder update(ItemStack itemStack) {
         this.itemStack = Objects.requireNonNull(itemStack).clone();
         this.itemMeta = Optional.ofNullable(itemStack.getItemMeta())
                 .orElse(Bukkit.getItemFactory().getItemMeta(itemStack.getType()));
         return this;
     }
 
-    @Override
-    public ItemBuilder setDurability(short durability) {
+    public SpigotItemBuilder setDurability(short durability) {
         if (itemStack.getType().getMaxDurability() > 0) {
             itemStack.setDurability(durability);
         }
         return this;
     }
 
-    @Override
-    public ItemBuilder setItem(ItemStack itemStack) {
+    public SpigotItemBuilder setItem(ItemStack itemStack) {
         return update(itemStack);
     }
 
-    @Override
-    public ItemBuilder addLine(String line) {
+    public SpigotItemBuilder addLine(String line) {
         List<String> lore = Optional.ofNullable(itemMeta.getLore())
                 .orElse(new ArrayList<>());
         lore.add(UniversalTextApi.colorize(line));
@@ -69,15 +65,12 @@ public class SpigotItemBuilder implements ItemBuilder {
         return this;
     }
 
-    @Override
-    public ItemBuilder setLore(List<String> lines) {
-        ConsoleLogger.debug("baselibrary", "Setting lore %s", lines);
-        itemMeta.setLore(UniversalTextApi.colorize(new ArrayList<>(lines)));
+    public SpigotItemBuilder setLore(List<String> lines) {
+        itemMeta.setLore(UniversalTextApi.colorize(lines));
         return this;
     }
 
-    @Override
-    public ItemBuilder setLeatherColor(Color color) {
+    public SpigotItemBuilder setLeatherColor(Color color) {
         if (LEATHER_ARMOR.contains(itemStack.getType())) {
             if (itemMeta instanceof LeatherArmorMeta) {
                 ((LeatherArmorMeta) itemMeta).setColor(color);
@@ -86,8 +79,7 @@ public class SpigotItemBuilder implements ItemBuilder {
         return this;
     }
 
-    @Override
-    public ItemBuilder setDyeColor(DyeColor dyeColor) {
+    public SpigotItemBuilder setDyeColor(DyeColor dyeColor) {
         try {
             Material dyeMaterial = Material.valueOf(dyeColor.name() + "_DYE");
             itemStack.setType(dyeMaterial);
@@ -97,80 +89,67 @@ public class SpigotItemBuilder implements ItemBuilder {
         return this;
     }
 
-    @Override
-    public ItemBuilder addEnchant(Enchantment enchantment, int level) {
+    public SpigotItemBuilder addEnchant(Enchantment enchantment, int level) {
         itemMeta.addEnchant(enchantment, level, true);
         return this;
     }
 
-    @Override
-    public ItemBuilder removeEnchant(Enchantment enchantment) {
+    public SpigotItemBuilder removeEnchant(Enchantment enchantment) {
         itemMeta.removeEnchant(enchantment);
         return this;
     }
 
-    @Override
-    public ItemBuilder addFlag(ItemFlag flag) {
+    public SpigotItemBuilder addFlag(ItemFlag flag) {
         itemMeta.addItemFlags(flag);
         return this;
     }
 
-    @Override
-    public ItemBuilder setUnbreakable(boolean unbreakable) {
+    public SpigotItemBuilder setUnbreakable(boolean unbreakable) {
         itemMeta.setUnbreakable(unbreakable);
         return this;
     }
 
-    @Override
-    public ItemBuilder setAmount(long count) {
+    public SpigotItemBuilder setAmount(long count) {
         if (count > 0 && count <= Integer.MAX_VALUE) {
             itemStack.setAmount((int) count);
         }
         return this;
     }
 
-    @Override
-    public ItemBuilder setCustomModelData(int data) {
+    public SpigotItemBuilder setCustomModelData(int data) {
         if (data >= 0) {
             itemMeta.setCustomModelData(data);
         }
         return this;
     }
 
-    @Override
-    public ItemBuilder setDisplayName(String name) {
-        ConsoleLogger.debug("baselibrary","Setting displayName %s", name);
+    public SpigotItemBuilder setDisplayName(String name) {
         itemMeta.setDisplayName(UniversalTextApi.colorize(name));
         return this;
     }
 
-    @Override
-    public ItemBuilder setType(Material material) {
+    public SpigotItemBuilder setType(Material material) {
         itemStack.setType(material);
         updateMeta();
         return this;
     }
 
-    @Override
-    public ItemBuilder setType(String materialName) {
+    public SpigotItemBuilder setType(String materialName) {
         try {
             Material material = Material.valueOf(materialName.toUpperCase());
             setType(material);
         } catch (IllegalArgumentException e) {
-            // Fallback to default material
             setType(Material.STONE);
         }
         return this;
     }
 
-    @Override
-    public ItemBuilder setMeta(ItemMeta meta) {
+    public SpigotItemBuilder setMeta(ItemMeta meta) {
         this.itemMeta = Objects.requireNonNull(meta);
         return this;
     }
 
-    @Override
-    public ItemBuilder glowing() {
+    public SpigotItemBuilder glowing() {
         if (itemMeta.hasEnchant(Enchantment.LUCK)) {
             itemMeta.removeEnchant(Enchantment.LUCK);
         } else {
