@@ -75,6 +75,16 @@ public abstract class NPlugin extends JavaPlugin {
         }
     }
 
+    public BukkitDirectory getDirectory(String name) {
+        Optional<BukkitDirectory> optionalBukkitDirectory = this.fileRepository.getDirectoryOrLoad(name);
+        if (optionalBukkitDirectory.isPresent()) {
+            return optionalBukkitDirectory.get();
+        }
+
+        ConsoleLogger.debug(this, "Couldn't load %s directory", name);
+        throw new IllegalStateException("Couldn't load directory " + name);
+    }
+
     /**
      * Получить экземпляр BaseLibrary
      */
