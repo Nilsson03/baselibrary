@@ -53,8 +53,7 @@ public class FileRepository {
         }
 
         if (directories.containsKey(directory)) {
-            ConsoleLogger.warn(plugin, "Directory %s already loaded", directory);
-            return Optional.empty();
+            return Optional.of(directories.get(directory));
         }
 
         String normalizePath = plugin.getDataFolder().getPath() + File.separator + directory;
@@ -88,7 +87,7 @@ public class FileRepository {
                     ConsoleLogger.warn(plugin, "Duplicate config %s found", name);
                     continue;
                 }
-                result.put(name, new BukkitConfig(plugin, name));
+                result.put(name, new BukkitConfig(plugin, dir, name));
             }
         }
         return result;
@@ -109,7 +108,7 @@ public class FileRepository {
             return Optional.empty();
         }
 
-        BukkitConfig bukkitConfig = new BukkitConfig(plugin, fileName);
+        BukkitConfig bukkitConfig = new BukkitConfig(plugin, directory.getFile(), fileName);
         try {
             if (bukkitConfig.getFile().exists()) {
                 ConsoleLogger.warn(plugin, "File %s exists on disk", fileName);
