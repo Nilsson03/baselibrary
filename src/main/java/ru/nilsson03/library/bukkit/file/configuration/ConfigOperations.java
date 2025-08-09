@@ -37,7 +37,7 @@ public class ConfigOperations {
     public boolean getBoolean(@NotNull String path, boolean defValue) {
         String value = map.getOrDefault(path, null);
         try {
-            return Boolean.parseBoolean((String) value);
+            return Boolean.parseBoolean(value);
         } catch (Exception e) {
             ConsoleLogger.warn("baselibrary", "Could not parse boolean value for path: " + path);
             return defValue;
@@ -112,7 +112,7 @@ public class ConfigOperations {
             return List.of(defaultErrorMessage());
         }
 
-        return Arrays.stream(value.split("\n"))
+        List<String> text = Arrays.stream(value.split("\n"))
                 .map(String::trim)
                 .map(line -> {
                     if (line.startsWith("[") && line.endsWith("]") &&
@@ -121,10 +121,10 @@ public class ConfigOperations {
                     }
                     return line;
                 })
-                .filter(line -> !line.isEmpty())
-                .map(line -> applyReplaces(line, replacesData))
                 .map(UniversalTextApi::colorize)
                 .collect(Collectors.toList());
+
+        return UniversalTextApi.replacePlaceholders(text, replacesData);
     }
 
     public String getString(@NotNull String path, ReplaceData... replacesData) {
@@ -134,22 +134,12 @@ public class ConfigOperations {
     public String getString(@NotNull String path, @Nullable String defValue, ReplaceData... replacesData) {
         String value = map.getOrDefault(path, null);
         if (value == null) {
-            ConsoleLogger.warn("baselibrary", "Could not parse string value for path: " + path + ". Returning default value.");
+            ConsoleLogger.warn("baselibrary", "Could not parse string value for path: " + path);
             return defValue != null ? UniversalTextApi.colorize(defValue) : "";
         }
 
-        String processedValue = applyReplaces(value, replacesData);
+        String processedValue = UniversalTextApi.replacePlaceholders(value, replacesData);
         return UniversalTextApi.colorize(processedValue);
-    }
-
-    private String applyReplaces(String text, ReplaceData... replacesData) {
-        String result = text;
-        for (ReplaceData replaceData : replacesData) {
-            if (replaceData != null && replaceData.getKey() != null && replaceData.getObject() != null) {
-                result = result.replace(replaceData.getKey(), replaceData.getObject().toString());
-            }
-        }
-        return result;
     }
 
     private String defaultErrorMessage() {
