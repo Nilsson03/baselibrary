@@ -5,6 +5,8 @@ import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
 import ru.nilsson03.library.text.util.ReplaceData;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,8 +56,14 @@ public class UniversalTextApi {
         return result;
     }
 
-    public static List<String> replacePlaceholders(List<String> lines, ReplaceData... replaceData) {
-        lines.replaceAll(line -> replacePlaceholders(line, replaceData));
-        return lines;
+    public static List<String> replacePlaceholders(List<String> lore, ReplaceData... replaceData) {
+        List<String> result = new ArrayList<>();
+        for (String str : lore) {
+            String replaced = replacePlaceholders(str, replaceData);
+            replaced = replaced.replace("[", "").replace("]", "");
+            String[] lines = replaced.split("\n");
+            result.addAll(Arrays.asList(lines));
+        }
+        return result;
     }
 }
