@@ -23,19 +23,32 @@ public class BukkitConfig {
     private FileConfiguration fileConfiguration;
     private final NPlugin plugin;
 
-    public BukkitConfig(NPlugin plugin, String fileName) {
+    public BukkitConfig(NPlugin plugin, File directory, String fileName) {
         if (plugin == null) {
             ConsoleLogger.debug("baselibrary", "Plugin cannot be null, class %s, plugin", getClass().getName());
             throw new IllegalArgumentException("plugin cannot be null, class " + getClass().getName());
         }
+
+        validateFileName(fileName);
+
         if (fileName == null || fileName.isEmpty()) {
             ConsoleLogger.debug(plugin, "File name cannot be null or empty, class %s, plugin %s", getClass().getName(), plugin.getName());
             throw new IllegalArgumentException("File name cannot be null or empty, class " + getClass().getName());
         }
         this.plugin = plugin;
-        this.file = FileHelper.createFileOrLoad(plugin, fileName);
+        this.file = new File(directory, fileName);
         this.name = fileName;
-        this.fileConfiguration = FileHelper.loadConfiguration(plugin, fileName);
+
+        if (!directory.exists() && !directory.mkdirs()) {
+            throw new IllegalStateException("Failed to create directory: " + directory);
+        }
+
+        try {
+            this.fileConfiguration = FileHelper.loadConfiguration(plugin, directory, fileName);
+        } catch (Exception e) {
+            ConsoleLogger.debug(plugin, "Failed to load configuration file, class %s, plugin %s", getClass().getName(), plugin.getName());
+            throw new IllegalStateException("Failed to load configuration file, class " + getClass().getName(), e);
+        }
         this.configuration = new BukkitConfigurationImpl(plugin, fileName, fileConfiguration);
     }
 
@@ -120,6 +133,13 @@ public class BukkitConfig {
             ConsoleLogger.info(plugin, "Deleted configuration %s for plugin %s.", getFile().getName(), plugin.getName());
         else
             ConsoleLogger.warn(plugin, "Failed to delete configuration %s for plugin %s.", getFile().getName(), plugin.getName());
+    }
+
+    private void validateFileName(String fileName) {
+        if (fileName == null || fileName.contains("..") || fileName.startsWith("/")) {
+            ConsoleLogger.debug(plugin, "File name cannot be null or empty, class %s, plugin %s", getClass().getName(), plugin.getName());
+            throw new IllegalArgumentException("File name cannot be null or empty, class " + getClass().getName());
+        }
     }
 
     @Deprecated
