@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatColor;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
 import ru.nilsson03.library.text.util.ReplaceData;
+import ru.nilsson03.library.text.util.switcher.Switchable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,5 +66,18 @@ public class UniversalTextApi {
             result.addAll(Arrays.asList(lines));
         }
         return result;
+    }
+
+    public static List<String> getColoredSelectLore(List<? extends Switchable> switchables, int selectedIndex) {
+        List<String> coloredLore = new ArrayList<>();
+        for (int i = 0; i < switchables.size(); i++) {
+            if (i == selectedIndex) {
+                coloredLore.add(" §a▹ " + switchables.get(i).displayText());
+            }
+            else {
+                coloredLore.add(" §8◦ " + switchables.get(i).displayText());
+            }
+        }
+        return coloredLore;
     }
 }
