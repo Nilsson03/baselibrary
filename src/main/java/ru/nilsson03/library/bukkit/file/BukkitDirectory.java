@@ -1,14 +1,12 @@
 package ru.nilsson03.library.bukkit.file;
 
 import com.google.common.base.Preconditions;
-import org.bukkit.configuration.file.FileConfiguration;
 import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.*;
 
 public class BukkitDirectory {
@@ -117,6 +115,21 @@ public class BukkitDirectory {
         } catch (NullPointerException e) {
             ConsoleLogger.warn(plugin, "The config file %s was not found in the %s directory!", fileName, directoryName);
             return null;
+        }
+    }
+
+    /**
+     * Перезагружает все конфигурации в кэше
+     */
+    public void reloadAllConfigs() {
+        try {
+            for (BukkitConfig config : cached.values()) {
+                config.reloadConfiguration();
+            }
+        } catch (Exception exception) {
+            ConsoleLogger.error("baselibrary", "An error %s occurred while reloading the %s directory configurations:",
+                    exception.getMessage(),
+                    getFile().getName());
         }
     }
 
