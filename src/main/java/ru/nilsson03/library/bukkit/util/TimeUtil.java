@@ -90,7 +90,7 @@ public final class TimeUtil {
             if (sb.length() > 0) sb.append(", ");
             sb.append(seconds).append(" ").append(getTimeUnitName(seconds, TimeUnit.SECONDS));
         } else if (sb.length() > 0) {
-            sb.setLength(sb.length() - 2); // Удаляем последнюю ", "
+            sb.setLength(sb.length() - 2);
         }
 
         return sb.toString();
@@ -221,7 +221,6 @@ public final class TimeUtil {
     /**
      * Возвращает правильную форму слова для единицы времени
      * @param value количество
-     * @param timeUnit единица времени
      * @return строковое представление единицы времени в правильной форме
      */
     private static String getTimeUnitName(long value, TimeUnit unit) {
@@ -244,15 +243,19 @@ public final class TimeUtil {
                 return "";
         }
     }
-    
+
     private static String getCorrectForm(long number, String form1, String form2, String form5) {
-        long n = Math.abs(number) % 100;
-        long n1 = n % 10;
-        
-        if (n > 10 && n < 20) return form5;
-        if (n1 == 1) return form1;
-        if (n1 >= 2 && n1 <= 4) return form2;
-        return form5;
+        long n = Math.abs(number);
+
+        if (n % 100 >= 11 && n % 100 <= 19) {
+            return form5;
+        }
+
+        return switch ((int) (n % 10)) {
+            case 1 -> form1;
+            case 2, 3, 4 -> form2;
+            default -> form5;
+        };
     }
 
     /**
