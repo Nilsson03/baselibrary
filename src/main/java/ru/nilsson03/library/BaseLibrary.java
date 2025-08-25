@@ -5,6 +5,7 @@ import java.io.File;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import ru.nilsson03.library.bukkit.file.FileHelper;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
@@ -13,7 +14,6 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 public class BaseLibrary extends JavaPlugin {
 
     private static BaseLibrary instance;
-
     private Integration integration;
 
     @Override
@@ -28,9 +28,11 @@ public class BaseLibrary extends JavaPlugin {
             return;
         }
 
+        this.saveDefaultConfig();
+
         ConsoleLogger.register(this);
 
-        File pluginsFolder = new File(getDataFolder().getParent());
+//        File pluginsFolder = new File(getDataFolder().getParent());
         // LibraryLoader libraryLoader = new LibraryLoader(pluginsFolder);
         //libraryLoader.loadLibraries("https://github.com/Nilsson03/menulibrary/releases/download/Test/menulibrary-1.1-RELEASE.jar");
 
