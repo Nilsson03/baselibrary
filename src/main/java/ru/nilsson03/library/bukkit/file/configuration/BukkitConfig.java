@@ -52,6 +52,25 @@ public class BukkitConfig {
         this.configuration = new BukkitConfigurationImpl(plugin, fileName, fileConfiguration);
     }
 
+    public <T> void setValue(String path, T value) {
+        if (fileConfiguration == null) {
+            ConsoleLogger.error("baselibrary", "Cant set value %s in file %s with path %s because fileConfiguration is null",
+                    value.toString(),
+                    getName(),
+                    path);
+            return;
+        }
+
+        try {
+            fileConfiguration.set(path, value);
+        } catch (Exception e) {
+            ConsoleLogger.error("baselibrary", "Can't set value %s to file %s, error: %s.",
+                    value.toString(),
+                    getName(),
+                    e.getMessage());
+        }
+    }
+
     public NPlugin getPlugin() {
         return plugin;
     }
@@ -108,6 +127,12 @@ public class BukkitConfig {
         return fileConfiguration;
     }
 
+    /**
+     * Добавлено в качестве обратной совместимости или для прямой работы
+     * с Bukkit'ским классом.
+     * @return
+     */
+    @Deprecated(since = "1.2.4")
     public FileConfiguration getFileConfiguration() {
         if (fileConfiguration == null) {
             fileConfiguration = loadConfiguration();
