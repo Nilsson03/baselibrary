@@ -7,6 +7,7 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -15,13 +16,11 @@ public class FileRepository {
     private static final Map<NPlugin, FileRepository> initializationMap = new ConcurrentHashMap<>();
     private final NPlugin plugin;
     private final Map<String, BukkitDirectory> directories;
-    private final List<String> excludedFilesFromParsing;
-    private final List<String> excludedDirectoryFromParsing;
+    private final List<String> excludesPath;
 
     {
         directories = new ConcurrentHashMap<>();
-        excludedFilesFromParsing = new CopyOnWriteArrayList<>();
-        excludedDirectoryFromParsing = new CopyOnWriteArrayList<>();
+        excludesPath = new CopyOnWriteArrayList<>();
     }
 
     public static FileRepository of(NPlugin plugin) {
@@ -47,7 +46,7 @@ public class FileRepository {
     public Optional<BukkitDirectory> load(String directory) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
 
-        if (shouldSkipDirectory(directory)) {
+        if (shouldSkipContentParsing(directory, "")) {
             ConsoleLogger.debug(plugin, "Skipping load of %s directory", directory);
             return Optional.empty();
         }
@@ -79,7 +78,7 @@ public class FileRepository {
         for (File file : directoryFiles) {
             if (file.isFile() && file.getName().endsWith(".yml")) {
                 String name = file.getName();
-                if (shouldSkipContentParsing(file)) {
+                if (shouldSkipContentParsing(dir.getName(), name)) {
                     ConsoleLogger.debug(plugin, "Skipping load of %s", name);
                     continue;
                 }
@@ -124,12 +123,13 @@ public class FileRepository {
         }
     }
 
-    private boolean shouldSkipContentParsing(File file) {
-        return excludedFilesFromParsing.contains(file.getName());
-    }
+    private boolean shouldSkipContentParsing(String directory, String fileName) {
+        Path dirPath = plugin.getDataFolder().toPath().resolve(directory).normalize();
+        Path fullPath = fileName == null || fileName.trim().isEmpty()
+                ? dirPath
+                : dirPath.resolve(fileName);
 
-    private boolean shouldSkipDirectory(String directoryName) {
-        return excludedDirectoryFromParsing.contains(directoryName);
+        return excludesPath.contains(fullPath.normalize().toString());
     }
 
     private boolean isFileExistsInAnyDirectory(String fileName) {
@@ -137,12 +137,15 @@ public class FileRepository {
                 .anyMatch(dir -> dir.containsFileWithName(fileName));
     }
 
-    public void addExcludedFiles(String... fileNames) {
-        excludedFilesFromParsing.addAll(Arrays.asList(fileNames));
+    public void addExcludedFiles(String... path) {
+        for (String file : path) {
+            addExcludePath(file);
+        }
     }
 
-    public void addExcludedDirectories(String... directoryNames) {
-        excludedDirectoryFromParsing.addAll(Arrays.asList(directoryNames));
+    public void addExcludePath(String path) {
+        Path fullPath = plugin.getDataFolder().toPath().resolve(path).normalize();
+        excludesPath.add(fullPath.toString());
     }
 
     public Optional<BukkitConfig> getByName(BukkitDirectory directory, String fileName) {
