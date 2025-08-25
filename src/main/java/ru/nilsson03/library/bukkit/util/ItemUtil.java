@@ -73,9 +73,10 @@ public class ItemUtil {
 
         if (type.equalsIgnoreCase("head")) {
             String texture = configOperations.getString(path + ".head-id");
-            return createHead(texture)
-                    .setLore(lore)
+            return new UniversalSkullBuilder(handler)
+                    .setSkinTexture(texture)
                     .setDisplayName(displayName)
+                    .setLore(lore)
                     .build();
         } else {
             String material = configOperations.getString(path + ".material");
@@ -85,9 +86,5 @@ public class ItemUtil {
                     .setLore(lore)
                     .build();
         }
-    }
-
-    public static SkullItemBuilder createHead(String url) {
-        return builder.setSkinTexture(url);
     }
 }
