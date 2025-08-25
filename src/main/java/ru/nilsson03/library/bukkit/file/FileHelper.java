@@ -22,7 +22,7 @@ public class FileHelper {
      *
      * @param plugin    Плагин.
      * @param dataFolder Директория с файлами.
-     * @param fileName  Имя файла.
+     * @param jarResourcePath  Имя файла.
      * @return Загруженная FileConfiguration.
      */
     public static FileConfiguration loadConfiguration(NPlugin plugin, File dataFolder, String jarResourcePath) {
@@ -30,15 +30,7 @@ public class FileHelper {
         Objects.requireNonNull(dataFolder, "dataFolder cannot be null");
         validateFileName(jarResourcePath);
 
-        File configFile;
-        if (jarResourcePath.contains("/")) {
-            String fileName = jarResourcePath.substring(jarResourcePath.lastIndexOf('/') + 1);
-            String subDirs = jarResourcePath.substring(0, jarResourcePath.lastIndexOf('/'));
-            File targetDir = new File(dataFolder, subDirs);
-            configFile = new File(targetDir, fileName);
-        } else {
-            configFile = new File(dataFolder, jarResourcePath);
-        }
+        File configFile = new File(dataFolder, jarResourcePath);
 
         if (!configFile.getParentFile().exists() && !configFile.getParentFile().mkdirs()) {
             throw new IllegalStateException("Failed to create directory: " + configFile.getParent());
