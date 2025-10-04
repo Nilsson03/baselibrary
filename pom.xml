@@ -6,7 +6,7 @@
 
     <groupId>ru.nilsson03</groupId>
     <artifactId>baselibrary</artifactId>
-    <version>1.2.3-BUG-FIXES</version>
+    <version>1.2.4-BUG-FIXES</version>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
@@ -134,7 +134,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.20.4-R0.1-SNAPSHOT</version>
+            <version>1.16.5-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
