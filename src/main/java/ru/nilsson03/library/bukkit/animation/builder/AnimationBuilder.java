@@ -3,7 +3,9 @@ package ru.nilsson03.library.bukkit.animation.builder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import ru.nilsson03.library.NPlugin;
@@ -20,10 +22,12 @@ public class AnimationBuilder {
     private Consumer<Location> completionHandler;
     private Location startLocation;
 
+    // Для ParticleAnimator
     private Particle particle;
     private double size;
     private Player targetPlayer;
-    private final NPlugin plugin;
+
+    private NPlugin plugin;
 
     public AnimationBuilder(NPlugin plugin) {
         this.plugin = plugin;
@@ -33,17 +37,20 @@ public class AnimationBuilder {
         return new AnimationBuilder(plugin);
     }
 
+    // Настройка частиц
     public AnimationBuilder withParticle(Particle particle, double size) {
         this.particle = particle;
         this.size = size;
         return this;
     }
 
+    // Настройка игрока
     public AnimationBuilder forPlayer(Player player) {
         this.targetPlayer = player;
         return this;
     }
 
+    // Добавление шагов анимации
     public AnimationBuilder addStep(Consumer<AnimationStep> stepConfigurator) {
         AnimationStep step = new AnimationStep();
         stepConfigurator.accept(step);
@@ -51,6 +58,7 @@ public class AnimationBuilder {
         return this;
     }
 
+    // Управление потоком
     public AnimationBuilder loop(boolean loop) {
         this.loop = loop;
         return this;
@@ -66,15 +74,17 @@ public class AnimationBuilder {
         return this;
     }
 
+    // Запуск анимации
     public UniversalAnimation buildAt(Location location) {
         this.startLocation = location;
 
         if (particle != null) {
             return new ParticleAnimationImpl();
-        }
+        } 
         throw new IllegalStateException("Не указан тип анимации (частицы или предмет)");
     }
 
+    // Реализация для частиц
     private class ParticleAnimationImpl implements UniversalAnimation {
         private BukkitTask task;
         private int currentStep = 0;
@@ -127,11 +137,9 @@ public class AnimationBuilder {
         }
     }
 
+    // Класс для конфигурации шага
     public static class AnimationStep {
         private String shape;
-        private Rotation rotation;
-        private Movement movement;
-        private Scale scale;
         private int duration = 20;
 
         public AnimationStep shape(String shape) {
@@ -139,52 +147,9 @@ public class AnimationBuilder {
             return this;
         }
 
-        public AnimationStep rotate(float yaw, float pitch, float roll) {
-            this.rotation = new Rotation(yaw, pitch, roll);
-            return this;
-        }
-
-        public AnimationStep moveTo(Location target) {
-            this.movement = new Movement(target);
-            return this;
-        }
-
-        public AnimationStep scale(float x, float y, float z) {
-            this.scale = new Scale(x, y, z);
-            return this;
-        }
-
         public AnimationStep duration(int ticks) {
             this.duration = ticks;
             return this;
-        }
-    }
-
-    private static class Rotation {
-        final float yaw, pitch, roll;
-
-        Rotation(float yaw, float pitch, float roll) {
-            this.yaw = yaw;
-            this.pitch = pitch;
-            this.roll = roll;
-        }
-    }
-
-    private static class Movement {
-        final Location target;
-
-        Movement(Location target) {
-            this.target = target;
-        }
-    }
-
-    private static class Scale {
-        final float x, y, z;
-
-        Scale(float x, float y, float z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
         }
     }
 }
