@@ -68,14 +68,14 @@ public class UniversalTextApi {
         return result;
     }
 
-    public static List<String> getColoredSelectLore(List<? extends Switchable> switchables, int selectedIndex) {
+    public static List<String> getColoredSelectLore(List<String> switchables, int selectedIndex) {
         List<String> coloredLore = new ArrayList<>();
         for (int i = 0; i < switchables.size(); i++) {
             if (i == selectedIndex) {
-                coloredLore.add(" §a▹ " + switchables.get(i).displayText());
+                coloredLore.add(" §a▹ " + switchables.get(i));
             }
             else {
-                coloredLore.add(" §8◦ " + switchables.get(i).displayText());
+                coloredLore.add(" §8◦ " + switchables.get(i));
             }
         }
         return coloredLore;
