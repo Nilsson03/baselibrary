@@ -71,6 +71,33 @@ public class ConfigOperations {
         }
     }
 
+        /**
+     * Получает значение типа long по указанному пути.
+     *
+     * @param path Путь к значению.
+     * @return Значение long или значение по умолчанию (0).
+     */
+    public long getLong(@NotNull String path) {
+        return getLong(path, 0);
+    }
+
+    /**
+     * Получает значение типа long по указанному пути с возможностью указать значение по умолчанию.
+     *
+     * @param path       Путь к значению.
+     * @param defValue   Значение по умолчанию.
+     * @return Значение long или значение по умолчанию.
+     */
+    public long getLong(@NotNull String path, int defValue) {
+        String value = map.getOrDefault(path, null);
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            ConsoleLogger.warn("baselibrary", "Could not parse long value for path: " + path);
+            return defValue;
+        }
+    }
+
     /**
      * Получает значение типа double по указанному пути.
      *
