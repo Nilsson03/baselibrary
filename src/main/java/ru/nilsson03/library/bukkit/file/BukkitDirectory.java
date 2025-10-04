@@ -91,6 +91,35 @@ public class BukkitDirectory {
     }
 
     /**
+     * Перезагружает все файлы конфигурации в кэше директории.
+     * Логирует результат операции одним сообщением.
+     */
+    public void reloadAll() {
+        if (cached.isEmpty()) {
+            ConsoleLogger.debug(plugin, "No cached files to reload in directory: %s", directoryName);
+            return;
+        }
+
+        int totalFiles = cached.size();
+        int reloadedFiles = 0;
+        int failedFiles = 0;
+
+        for (BukkitConfig config : cached.values()) {
+            try {
+                config.reloadConfiguration();
+                reloadedFiles++;
+            } catch (Exception e) {
+                failedFiles++;
+                ConsoleLogger.warn(plugin, "Failed to reload config %s in directory %s: %s", 
+                                 config.getName(), directoryName, e.getMessage());
+            }
+        }
+
+        ConsoleLogger.info(plugin, "Reloaded %d/%d config files in directory %s (failed: %d)", 
+                         reloadedFiles, totalFiles, directoryName, failedFiles);
+    }
+
+    /**
      * Получает BukkitConfig из кэша файлов директории,
      * затем создаёт обёртку Optional и возвращает результат.
      * @param fileName название файла из директории
@@ -115,21 +144,6 @@ public class BukkitDirectory {
         } catch (NullPointerException e) {
             ConsoleLogger.warn(plugin, "The config file %s was not found in the %s directory!", fileName, directoryName);
             return null;
-        }
-    }
-
-    /**
-     * Перезагружает все конфигурации в кэше
-     */
-    public void reloadAllConfigs() {
-        try {
-            for (BukkitConfig config : cached.values()) {
-                config.reloadConfiguration();
-            }
-        } catch (Exception exception) {
-            ConsoleLogger.error("baselibrary", "An error %s occurred while reloading the %s directory configurations:",
-                    exception.getMessage(),
-                    getFile().getName());
         }
     }
 
