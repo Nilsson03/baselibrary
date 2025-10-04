@@ -68,21 +68,14 @@ public class UniversalTextApi {
         return result;
     }
 
-    /**
-     * Принимает список строк и индекс текущей позиций и возвращает цветной список строк в зависимости от индекса.
-     * (Предполагается работа с Switchable instarface).
-     * @param switchables   список строк
-     * @param selectedIndex индекс текущей позиции (соотносится с индексом в списке).
-     * @return               список строк с цветным форматов
-     */
     public static List<String> getColoredSelectLore(List<String> switchables, int selectedIndex) {
         List<String> coloredLore = new ArrayList<>();
         for (int i = 0; i < switchables.size(); i++) {
             if (i == selectedIndex) {
-                coloredLore.add(" &#FFD65C▹ " + switchables.get(i));
+                coloredLore.add(" §a▹ " + switchables.get(i));
             }
             else {
-                coloredLore.add(" &#A3FF8F◦ " + switchables.get(i));
+                coloredLore.add(" §8◦ " + switchables.get(i));
             }
         }
         return coloredLore;
