@@ -10,17 +10,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class FileRepository {
     private static final Map<NPlugin, FileRepository> initializationMap = new ConcurrentHashMap<>();
     private final NPlugin plugin;
     private final Map<String, BukkitDirectory> directories;
-    private final List<String> excludesPath;
+    private final Set<String> excludedPaths;
 
     {
         directories = new ConcurrentHashMap<>();
-        excludesPath = new CopyOnWriteArrayList<>();
+        excludedPaths = ConcurrentHashMap.newKeySet();
     }
 
     public static FileRepository of(NPlugin plugin) {
@@ -46,11 +45,6 @@ public class FileRepository {
     public Optional<BukkitDirectory> load(String directory) {
         Objects.requireNonNull(plugin, "plugin cannot be null");
 
-        if (shouldSkipContentParsing(directory, "")) {
-            ConsoleLogger.debug(plugin, "Skipping load of %s directory", directory);
-            return Optional.empty();
-        }
-
         if (directories.containsKey(directory)) {
             return Optional.of(directories.get(directory));
         }
@@ -73,22 +67,36 @@ public class FileRepository {
     private Map<String, BukkitConfig> loadFiles(File dir) {
         Map<String, BukkitConfig> result = new HashMap<>();
         File[] directoryFiles = dir.listFiles();
-        if (directoryFiles == null) return result;
+        if (directoryFiles == null) {
+            ConsoleLogger.debug(plugin, "No files found in directory: %s", dir.getPath());
+            return result;
+        }
+
+        ConsoleLogger.debug(plugin, "Loading files from directory: %s (found %d files)", 
+                           dir.getPath(), directoryFiles.length);
 
         for (File file : directoryFiles) {
             if (file.isFile() && file.getName().endsWith(".yml")) {
                 String name = file.getName();
-                if (shouldSkipContentParsing(dir.getName(), name)) {
-                    ConsoleLogger.debug(plugin, "Skipping load of %s", name);
+                String relativePath = getRelativePathFromPluginRoot(file, dir);
+                
+                ConsoleLogger.debug(plugin, "Processing file: %s (relative path: %s)", name, relativePath);
+                
+                if (shouldSkipContentParsing(file)) {
+                    ConsoleLogger.debug(plugin, "Skipping load of %s (path: %s)", name, relativePath);
                     continue;
                 }
                 if (isFileExistsInAnyDirectory(name)) {
-                    ConsoleLogger.warn(plugin, "Duplicate config %s found", name);
+                    ConsoleLogger.warn(plugin, "Duplicate config %s found (path: %s)", name, relativePath);
                     continue;
                 }
+                
+                ConsoleLogger.debug(plugin, "Loading config: %s (path: %s)", name, relativePath);
                 result.put(name, new BukkitConfig(plugin, dir, name));
             }
         }
+        
+        ConsoleLogger.debug(plugin, "Loaded %d configs from directory: %s", result.size(), dir.getPath());
         return result;
     }
 
@@ -123,13 +131,14 @@ public class FileRepository {
         }
     }
 
-    private boolean shouldSkipContentParsing(String directory, String fileName) {
-        Path dirPath = plugin.getDataFolder().toPath().resolve(directory).normalize();
-        Path fullPath = fileName == null || fileName.trim().isEmpty()
-                ? dirPath
-                : dirPath.resolve(fileName);
-
-        return excludesPath.contains(fullPath.normalize().toString());
+    private boolean shouldSkipContentParsing(File file) {
+        // Затем проверяем исключения по полному пути (новая логика)
+        File parentDir = file.getParentFile();
+        if (shouldSkipFileByPath(file, parentDir)) {
+            return true;
+        }
+        
+        return false;
     }
 
     private boolean isFileExistsInAnyDirectory(String fileName) {
@@ -137,15 +146,124 @@ public class FileRepository {
                 .anyMatch(dir -> dir.containsFileWithName(fileName));
     }
 
-    public void addExcludedFiles(String... path) {
-        for (String file : path) {
-            addExcludePath(file);
+    /**
+     * Добавляет путь файла в исключения для точного соответствия.
+     * Поддерживает как файлы в корне, так и файлы в поддиректориях.
+     * 
+     * @param path Путь к файлу для исключения (например: "config.yml", "inventories/shop.yml")
+     */
+    public void addExcludePath(String path) {
+        if (path == null || path.trim().isEmpty()) {
+            ConsoleLogger.warn(plugin, "Cannot add empty or null path to exclusions");
+            return;
         }
+        
+        String normalizedPath = normalizePath(path);
+        excludedPaths.add(normalizedPath);
+        ConsoleLogger.debug(plugin, "Added exclusion path: %s (normalized: %s)", path, normalizedPath);
     }
 
-    public void addExcludePath(String path) {
-        Path fullPath = plugin.getDataFolder().toPath().resolve(path).normalize();
-        excludesPath.add(fullPath.toString());
+    /**
+     * Добавляет несколько путей файлов в исключения для точного соответствия.
+     * Поддерживает как файлы в корне, так и файлы в поддиректориях.
+     * 
+     * @param paths Пути к файлам для исключения (например: "config.yml", "inventories/shop.yml", "data/players.yml")
+     */
+    public void addExcludePaths(String... paths) {
+        if (paths == null || paths.length == 0) {
+            ConsoleLogger.warn(plugin, "Cannot add null or empty paths array to exclusions");
+            return;
+        }
+
+        int addedCount = 0;
+        int skippedCount = 0;
+
+        for (String path : paths) {
+            if (path == null || path.trim().isEmpty()) {
+                ConsoleLogger.warn(plugin, "Skipping null or empty path in exclusions");
+                skippedCount++;
+                continue;
+            }
+            
+            String normalizedPath = normalizePath(path);
+            if (excludedPaths.add(normalizedPath)) {
+                addedCount++;
+                ConsoleLogger.debug(plugin, "Added exclusion path: %s (normalized: %s)", path, normalizedPath);
+            } else {
+                ConsoleLogger.debug(plugin, "Path already excluded: %s (normalized: %s)", path, normalizedPath);
+            }
+        }
+
+        ConsoleLogger.info(plugin, "Added %d exclusion paths (skipped: %d, total excluded: %d)", 
+                         addedCount, skippedCount, excludedPaths.size());
+    }
+
+    /**
+     * Нормализует путь для кроссплатформенности.
+     * Заменяет все разделители на File.separator и убирает лишние разделители.
+     * 
+     * @param path Исходный путь
+     * @return Нормализованный путь
+     */
+    private String normalizePath(String path) {
+        if (path == null) return null;
+        return Path.of(path).normalize().toString();
+    }
+
+    /**
+     * Проверяет, должен ли файл быть исключен на основе его полного пути.
+     * Сравнивает точный путь файла с исключениями.
+     * 
+     * @param file Файл для проверки
+     * @param parentDirectory Родительская директория файла
+     * @return true если файл должен быть исключен
+     */
+    private boolean shouldSkipFileByPath(File file, File parentDirectory) {
+        if (excludedPaths.isEmpty()) {
+            return false;
+        }
+        
+        // Получаем относительный путь от корня плагина
+        String relativePath = getRelativePathFromPluginRoot(file, parentDirectory);
+        String normalizedPath = normalizePath(relativePath);
+        
+        boolean shouldSkip = excludedPaths.contains(normalizedPath);
+        
+        if (shouldSkip) {
+            ConsoleLogger.debug(plugin, "Skipping file by path exclusion: %s (normalized: %s)", 
+                              relativePath, normalizedPath);
+        }
+        
+        return shouldSkip;
+    }
+
+    /**
+     * Получает относительный путь файла от корня плагина.
+     * 
+     * @param file Файл
+     * @param parentDirectory Родительская директория
+     * @return Относительный путь
+     */
+    private String getRelativePathFromPluginRoot(File file, File parentDirectory) {
+        try {
+            String pluginRootPath = plugin.getDataFolder().getCanonicalPath();
+            String filePath = file.getCanonicalPath();
+            
+            if (filePath.startsWith(pluginRootPath)) {
+                String relativePath = filePath.substring(pluginRootPath.length());
+                // Убираем начальный разделитель если есть
+                if (relativePath.startsWith(File.separator)) {
+                    relativePath = relativePath.substring(File.separator.length());
+                }
+                return relativePath;
+            }
+        } catch (Exception e) {
+            ConsoleLogger.warn(plugin, "Failed to get relative path for file %s: %s", 
+                              file.getName(), e.getMessage());
+        }
+        
+        // Fallback: используем имя файла если не удалось получить относительный путь
+        return file.getName();
     }
 
     public Optional<BukkitConfig> getByName(BukkitDirectory directory, String fileName) {
@@ -154,6 +272,36 @@ public class FileRepository {
             ConsoleLogger.debug(plugin, "Directory %s not in cache", dirPath);
             return Optional.empty();
         }
-        return directories.get(dirPath).getConfig(fileName);
+        BukkitConfig config = directories.get(dirPath).getBukkitConfig(fileName);
+        return config != null ? Optional.of(config) : Optional.empty();
+    }
+
+    /**
+     * Получает список всех исключенных путей.
+     * 
+     * @return Множество исключенных путей
+     */
+    public Set<String> getExcludedPaths() {
+        return new HashSet<>(excludedPaths);
+    }
+
+    /**
+     * Проверяет, исключен ли указанный путь.
+     * 
+     * @param path Путь для проверки
+     * @return true если путь исключен
+     */
+    public boolean isPathExcluded(String path) {
+        if (path == null) return false;
+        String normalizedPath = normalizePath(path);
+        return excludedPaths.contains(normalizedPath);
+    }
+
+    /**
+     * Очищает все исключения путей.
+     */
+    public void clearExcludedPaths() {
+        excludedPaths.clear();
+        ConsoleLogger.debug(plugin, "Cleared all path exclusions");
     }
 }
