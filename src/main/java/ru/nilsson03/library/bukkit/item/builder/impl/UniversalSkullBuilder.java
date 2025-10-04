@@ -36,7 +36,7 @@ public class UniversalSkullBuilder implements SkullItemBuilder {
 
     @Override
     public SkullItemBuilder setLore(List<String> lore) {
-        skullMeta.setLore(UniversalTextApi.colorize(lore));
+        skullMeta.setLore(UniversalTextApi.colorize(new ArrayList<>(lore)));
         return this;
     }
 
