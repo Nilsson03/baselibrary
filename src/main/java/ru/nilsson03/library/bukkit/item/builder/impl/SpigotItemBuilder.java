@@ -162,11 +162,6 @@ public class SpigotItemBuilder implements ItemBuilder {
     @Override
     public ItemStack build() {
         itemStack.setItemMeta(itemMeta);
-        ConsoleLogger.debug("baselibrary", "Create ItemStack (name %s, lore %s, type %s, amount %s)",
-                itemMeta.getDisplayName(),
-                itemMeta.getLore(),
-                itemStack.getType().name(),
-                itemStack.getAmount());
         return itemStack.clone();
     }
 
