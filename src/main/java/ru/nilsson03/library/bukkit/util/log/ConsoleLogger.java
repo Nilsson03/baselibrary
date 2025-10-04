@@ -2,7 +2,6 @@ package ru.nilsson03.library.bukkit.util.log;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.nilsson03.library.BaseLibrary;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -101,16 +100,7 @@ public final class ConsoleLogger {
         if (level != LogLevel.DEBUG)
             Bukkit.getConsoleSender().sendMessage(formatted);
 
-        if (level == LogLevel.DEBUG) {
-            if (!BaseLibrary.getInstance().getConfig().getBoolean("debug"))
-                return;
-        }
-
         if (level == LogLevel.ERROR || level == LogLevel.WARNING || level == LogLevel.DEBUG) {
-            if (level == LogLevel.DEBUG) {
-                if (!BaseLibrary.getInstance().getConfig().getBoolean("debug"))
-                    return;
-                }
             if (LOGGERS.containsKey(pluginName)) {
                 Logger logger = LOGGERS.get(pluginName);
                 logger.log(level, format, args);
