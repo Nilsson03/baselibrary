@@ -39,25 +39,9 @@ public class ConfigOperations {
         try {
             return Boolean.parseBoolean(value);
         } catch (Exception e) {
-            ConsoleLogger.warn("baselibrary", "Could not parse boolean value for path: %s.", path);
+            ConsoleLogger.warn("baselibrary", "Could not parse boolean value for path: " + path);
             return defValue;
         }
-    }
-
-    public Long getLong(@NotNull String path, long defVaule) {
-        String value = map.getOrDefault(path, null);
-        try {
-            return Long.parseLong(value);
-        } catch (Exception e) {
-            ConsoleLogger.warn("baselibrary", "Could not parse long value for path: %s. Returning default value %s",
-                    path,
-                    defVaule);
-            return defVaule;
-        }
-    }
-
-    public Long getLong(@NotNull String path) {
-        return getLong(path, 0);
     }
 
     /**
@@ -82,7 +66,34 @@ public class ConfigOperations {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            ConsoleLogger.warn("baselibrary", "Could not parse int value for path: %s.", path);
+            ConsoleLogger.warn("baselibrary", "Could not parse int value for path: " + path);
+            return defValue;
+        }
+    }
+
+        /**
+     * Получает значение типа long по указанному пути.
+     *
+     * @param path Путь к значению.
+     * @return Значение long или значение по умолчанию (0).
+     */
+    public long getLong(@NotNull String path) {
+        return getLong(path, 0);
+    }
+
+    /**
+     * Получает значение типа long по указанному пути с возможностью указать значение по умолчанию.
+     *
+     * @param path       Путь к значению.
+     * @param defValue   Значение по умолчанию.
+     * @return Значение long или значение по умолчанию.
+     */
+    public long getLong(@NotNull String path, int defValue) {
+        String value = map.getOrDefault(path, null);
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            ConsoleLogger.warn("baselibrary", "Could not parse long value for path: " + path);
             return defValue;
         }
     }
@@ -109,7 +120,7 @@ public class ConfigOperations {
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException e) {
-            ConsoleLogger.warn("baselibrary", "Could not parse double value for path: %s.", path);
+            ConsoleLogger.warn("baselibrary", "Could not parse double value for path: " + path);
             return defValue;
         }
     }
@@ -124,7 +135,7 @@ public class ConfigOperations {
     public List<String> getList(@NotNull String path, ReplaceData... replacesData) {
         String value = map.getOrDefault(path, null);
         if (value == null) {
-            ConsoleLogger.warn("baselibrary", "Could not parse list value for path: %s. Returning default message.", path);
+            ConsoleLogger.warn("baselibrary", "Could not parse list value for path: " + path + ". Returning default message.");
             return List.of(defaultErrorMessage());
         }
 
@@ -150,7 +161,7 @@ public class ConfigOperations {
     public String getString(@NotNull String path, @Nullable String defValue, ReplaceData... replacesData) {
         String value = map.getOrDefault(path, null);
         if (value == null) {
-            ConsoleLogger.warn("baselibrary", "Could not parse string value for path: %s.", path);
+            ConsoleLogger.warn("baselibrary", "Could not parse string value for path: " + path);
             return defValue != null ? UniversalTextApi.colorize(defValue) : "";
         }
 
