@@ -5,11 +5,13 @@ import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.FileHelper;
 import ru.nilsson03.library.bukkit.file.configuration.impl.BukkitConfigurationImpl;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.text.util.ReplaceData;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -124,6 +126,68 @@ public class BukkitConfig {
         Objects.requireNonNull(configuration, "Configuration cannot be null");
 
         return getBukkitConfiguration().operations();
+    }
+
+    /**
+     * Получает значение типа boolean по указанному пути.
+     *
+     * @param path Путь к значению.
+     * @return Значение boolean или значение по умолчанию (false).
+     */
+    public boolean getBoolean(String path) {
+        return operations().getBoolean(path);
+    }
+
+    /**
+     * Получает значение типа int по указанному пути.
+     *
+     * @param path Путь к значению.
+     * @return Значение int или значение по умолчанию (0).
+     */
+    public int getInt(String path) {
+        return operations().getInt(path);
+    }
+
+    /**
+     * Получает значение типа long по указанному пути.
+     *
+     * @param path Путь к значению.
+     * @return Значение long или значение по умолчанию (0).
+     */
+    public long getLong(String path) {
+        return operations().getLong(path);
+    }
+
+    /**
+     * Получает значение типа double по указанному пути.
+     *
+     * @param path Путь к значению.
+     * @return Значение double или значение по умолчанию (0.0D).
+     */
+    public double getDouble(String path) {
+        return operations().getDouble(path);
+    }
+
+    /**
+     * Получает список строк по указанному пути с возможностью замены данных.
+     *
+     * @param path          Путь к значению.
+     * @param replacesData  Массив ReplaceData для замены данных.
+     * @return Список строк или пустой список при ошибке.
+     */
+    public List<String> getList(String path, ReplaceData... replacesData) {
+        return operations().getList(path, replacesData);
+    }
+
+    /**
+     * Получает строку по указанному пути с возможностью замены данных.
+     *
+     * @param path          Путь к значению.
+     * @param replacesData  Массив ReplaceData для замены данных.
+     * @return Строка или сообщение об ошибке по умолчанию.
+     */
+    public String getString(String path, ReplaceData... replacesData) {
+        return operations().getString(path, replacesData);
     }
 
     public void delete() {
