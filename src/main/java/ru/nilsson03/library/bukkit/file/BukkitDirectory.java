@@ -1,14 +1,12 @@
 package ru.nilsson03.library.bukkit.file;
 
 import com.google.common.base.Preconditions;
-import org.bukkit.configuration.file.FileConfiguration;
 import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.*;
 
 public class BukkitDirectory {
@@ -90,6 +88,35 @@ public class BukkitDirectory {
         if (config != null) {
             config.reloadConfiguration();
         }
+    }
+
+    /**
+     * Перезагружает все файлы конфигурации в кэше директории.
+     * Логирует результат операции одним сообщением.
+     */
+    public void reloadAll() {
+        if (cached.isEmpty()) {
+            ConsoleLogger.debug(plugin, "No cached files to reload in directory: %s", directoryName);
+            return;
+        }
+
+        int totalFiles = cached.size();
+        int reloadedFiles = 0;
+        int failedFiles = 0;
+
+        for (BukkitConfig config : cached.values()) {
+            try {
+                config.reloadConfiguration();
+                reloadedFiles++;
+            } catch (Exception e) {
+                failedFiles++;
+                ConsoleLogger.warn(plugin, "Failed to reload config %s in directory %s: %s", 
+                                 config.getName(), directoryName, e.getMessage());
+            }
+        }
+
+        ConsoleLogger.info(plugin, "Reloaded %d/%d config files in directory %s (failed: %d)", 
+                         reloadedFiles, totalFiles, directoryName, failedFiles);
     }
 
     /**
