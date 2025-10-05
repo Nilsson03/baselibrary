@@ -2,8 +2,6 @@ package ru.nilsson03.library.bukkit.util.log;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.nilsson03.library.BaseLibrary;
-import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
 
 import java.io.BufferedWriter;
