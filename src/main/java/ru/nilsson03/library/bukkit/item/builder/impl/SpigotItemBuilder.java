@@ -7,7 +7,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import ru.nilsson03.library.bukkit.item.builder.ItemBuilder;
-import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 import ru.nilsson03.library.text.api.UniversalTextApi;
 
 import java.util.*;
@@ -46,6 +45,7 @@ public class SpigotItemBuilder implements ItemBuilder {
         return this;
     }
 
+    @Deprecated
     public SpigotItemBuilder setDurability(short durability) {
         if (itemStack.getType().getMaxDurability() > 0) {
             itemStack.setDurability(durability);
