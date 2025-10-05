@@ -147,10 +147,10 @@ public class FileRepository {
     }
 
     /**
-     * Добавляет путь файла в исключения для точного соответствия.
-     * Поддерживает как файлы в корне, так и файлы в поддиректориях.
+     * Добавляет путь файла или папки в исключения.
+     * Поддерживает как файлы в корне, так и файлы в поддиректориях, а также целые папки.
      * 
-     * @param path Путь к файлу для исключения (например: "config.yml", "inventories/shop.yml")
+     * @param path Путь к файлу или папке для исключения (например: "config.yml", "inventories/shop.yml", "users")
      */
     public void addExcludePath(String path) {
         if (path == null || path.trim().isEmpty()) {
@@ -164,10 +164,10 @@ public class FileRepository {
     }
 
     /**
-     * Добавляет несколько путей файлов в исключения для точного соответствия.
-     * Поддерживает как файлы в корне, так и файлы в поддиректориях.
+     * Добавляет несколько путей файлов или папок в исключения.
+     * Поддерживает как файлы в корне, так и файлы в поддиректориях, а также целые папки.
      * 
-     * @param paths Пути к файлам для исключения (например: "config.yml", "inventories/shop.yml", "data/players.yml")
+     * @param paths Пути к файлам или папкам для исключения (например: "config.yml", "inventories/shop.yml", "users", "data/players.yml")
      */
     public void addExcludePaths(String... paths) {
         if (paths == null || paths.length == 0) {
@@ -227,14 +227,24 @@ public class FileRepository {
         String relativePath = getRelativePathFromPluginRoot(file, parentDirectory);
         String normalizedPath = normalizePath(relativePath);
         
-        boolean shouldSkip = excludedPaths.contains(normalizedPath);
-        
-        if (shouldSkip) {
-            ConsoleLogger.debug(plugin, "Skipping file by path exclusion: %s (normalized: %s)", 
+        // Проверяем точное соответствие пути
+        if (excludedPaths.contains(normalizedPath)) {
+            ConsoleLogger.debug(plugin, "Skipping file by exact path exclusion: %s (normalized: %s)", 
                               relativePath, normalizedPath);
+            return true;
         }
         
-        return shouldSkip;
+        // Проверяем, находится ли файл в исключенной папке
+        for (String excludedPath : excludedPaths) {
+            if (normalizedPath.startsWith(excludedPath + File.separator) || 
+                normalizedPath.startsWith(excludedPath + "/")) {
+                ConsoleLogger.debug(plugin, "Skipping file by folder exclusion: %s (in folder: %s)", 
+                                  relativePath, excludedPath);
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
