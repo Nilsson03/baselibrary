@@ -1,0 +1,6 @@
+name: BaseLibrary
+version: '${project.version}'
+main: ru.nilsson03.library.BaseLibrary
+api-version: 1.16
+authors: [Nilsson03]
+description: "The library used for plugins written by Nilsson03."
