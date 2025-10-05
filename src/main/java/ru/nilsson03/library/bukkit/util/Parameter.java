@@ -6,6 +6,7 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public final class Parameter {
 
@@ -77,6 +78,15 @@ public final class Parameter {
                     }
                     List<String> list = new ArrayList<>(Arrays.asList(value.split(", ")));
                     return targetType.cast(list);
+            } else if (targetType == Map.class) {
+                if (value instanceof Map) {
+                    return targetType.cast(value);
+                }
+                if (value instanceof ConfigurationSection) {
+                    ConfigurationSection section = (ConfigurationSection) value;
+                    Map<String, Object> map = section.getValues(false);
+                    return targetType.cast(map);
+                }
             } else if (targetType == ConfigurationSection.class) {
                 if (value instanceof ConfigurationSection) {
                     return targetType.cast(value);
@@ -138,7 +148,9 @@ public final class Parameter {
         return value instanceof String ||
                 value instanceof Number ||
                 value instanceof Boolean ||
-                value instanceof List;
+                value instanceof List ||
+                value instanceof Map ||
+                value instanceof ConfigurationSection;
     }
 
     private static Parameter fromEmptyString() {
