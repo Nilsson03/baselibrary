@@ -1,6 +1,5 @@
 package ru.nilsson03.library.bukkit.item.skull.factory;
 
-import org.bukkit.Bukkit;
 import ru.nilsson03.library.bukkit.item.skull.SkullTextureHandler;
 import ru.nilsson03.library.bukkit.item.skull.impl.universal.PaperSkullTextureHandler;
 import ru.nilsson03.library.bukkit.item.skull.impl.versioned.SpigotSkullTextureHandler_v1_19;
@@ -12,7 +11,6 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 public class SkullHandlerFactory {
 
     public static SkullTextureHandler createHandler() {
-        String serverType = Bukkit.getServer().getName();
         String core = ServerVersionUtils.CORE;
         ServerVersion version = ServerVersionUtils.getServerVersion();
 

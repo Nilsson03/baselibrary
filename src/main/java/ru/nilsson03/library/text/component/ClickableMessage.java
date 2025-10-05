@@ -18,6 +18,7 @@ public final class ClickableMessage {
         return new ClickableMessage(text);
     }
 
+    @SuppressWarnings("deprecation")
     public ClickableMessage withHover(String hoverText) {
         if (hoverText != null && !hoverText.isEmpty()) {
             component.setHoverEvent(new HoverEvent(

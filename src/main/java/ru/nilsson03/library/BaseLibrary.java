@@ -1,7 +1,5 @@
 package ru.nilsson03.library;
 
-import java.io.File;
-
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,10 +27,6 @@ public class BaseLibrary extends JavaPlugin {
         }
 
         ConsoleLogger.register(this);
-
-        File pluginsFolder = new File(getDataFolder().getParent());
-        // LibraryLoader libraryLoader = new LibraryLoader(pluginsFolder);
-        //libraryLoader.loadLibraries("https://github.com/Nilsson03/menulibrary/releases/download/Test/menulibrary-1.1-RELEASE.jar");
 
         integration = new Integration(this);
 

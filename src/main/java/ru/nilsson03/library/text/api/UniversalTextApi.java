@@ -4,7 +4,6 @@ import net.md_5.bungee.api.ChatColor;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
 import ru.nilsson03.library.text.util.ReplaceData;
-import ru.nilsson03.library.text.util.switcher.Switchable;
 
 import java.util.ArrayList;
 import java.util.Arrays;

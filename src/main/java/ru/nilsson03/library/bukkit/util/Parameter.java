@@ -5,7 +5,6 @@ import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public final class Parameter {

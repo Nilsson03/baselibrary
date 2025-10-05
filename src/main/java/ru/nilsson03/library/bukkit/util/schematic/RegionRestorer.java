@@ -15,7 +15,6 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -49,7 +48,6 @@ public class RegionRestorer {
      */
     @PluginDependency(name = "WorldEdit", minVersion = "7.2.9", skipIfUnavailable = true)
     public void scheduleRegionRestore(Cuboid cuboid, String uniqueName, long delayMinutes) {
-        Location center = cuboid.getCenter();
         World world = cuboid.getWorld();
         com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
 

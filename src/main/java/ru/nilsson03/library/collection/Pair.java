@@ -7,6 +7,7 @@ public abstract class Pair<L, R> implements Map.Entry<L, R> {
 
     public static final Pair<?, ?>[] EMPTY_ARRAY = {};
 
+    @SuppressWarnings("unchecked")
     public static <L, R> Pair<L, R>[] emptyArray() {
         return (Pair<L, R>[]) EMPTY_ARRAY;
     }
