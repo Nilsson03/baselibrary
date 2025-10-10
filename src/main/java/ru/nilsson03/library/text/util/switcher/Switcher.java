@@ -36,6 +36,11 @@ public class Switcher {
         onSwitch.accept(variables.get(currentPos));
     }
 
+    public void previous() {
+        currentPos = (currentPos - 1 + variables.size()) % variables.size();
+        onSwitch.accept(variables.get(currentPos));
+    }
+
     public Switchable getCurrent() {
         return variables.get(currentPos);
     }
