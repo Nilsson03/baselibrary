@@ -29,7 +29,7 @@ public class CacheManager {
             }
         );
         
-        ConsoleLogger.info("CacheManager", "Cache manager initialized with %d threads", 
+        ConsoleLogger.info("baselibrary", "Cache manager initialized with %d threads", 
             Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
     }
     
@@ -43,7 +43,7 @@ public class CacheManager {
         }
         
         if (caches.containsKey(name)) {
-            ConsoleLogger.warn("CacheManager", "Cache with name '%s' already exists, returning existing", name);
+            ConsoleLogger.warn("baselibrary", "Cache with name '%s' already exists, returning existing", name);
             @SuppressWarnings("unchecked")
             LightCache<K, V> existing = (LightCache<K, V>) caches.get(name);
             return existing;
@@ -52,7 +52,7 @@ public class CacheManager {
         LightCache<K, V> cache = new LightCache<>(name, cacheSize, expireAfterAccess, scheduler);
         caches.put(name, cache);
         
-        ConsoleLogger.debug("CacheManager", "Created cache '%s' with size=%d, expireAfter=%dms", 
+        ConsoleLogger.debug("baselibrary", "Created cache '%s' with size=%d, expireAfter=%dms", 
             name, cacheSize, expireAfterAccess);
         
         return cache;
@@ -71,7 +71,7 @@ public class CacheManager {
         LightCache<?, ?> cache = caches.remove(name);
         if (cache != null) {
             cache.shutdown();
-            ConsoleLogger.debug("CacheManager", "Removed and shutdown cache '%s'", name);
+            ConsoleLogger.debug("baselibrary", "Removed and shutdown cache '%s'", name);
             return true;
         }
         return false;
@@ -99,20 +99,18 @@ public class CacheManager {
             return;
         }
         
-        ConsoleLogger.info("CacheManager", "Shutting down cache manager with %d caches", caches.size());
+        ConsoleLogger.info("baselibrary", "Shutting down cache manager with %d caches", caches.size());
         
         shutdown = true;
         
-        caches.values().forEach(LightCache::shutdown);
-        caches.clear();
-        
+        // Сначала останавливаем scheduler
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
             try {
                 if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) {
                     scheduler.shutdownNow();
                     if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                        ConsoleLogger.warn("CacheManager", "Cache scheduler did not terminate gracefully");
+                        ConsoleLogger.warn("baselibrary", "Cache scheduler did not terminate gracefully");
                     }
                 }
             } catch (InterruptedException e) {
@@ -121,7 +119,11 @@ public class CacheManager {
             }
         }
         
-        ConsoleLogger.info("CacheManager", "Cache manager shutdown completed");
+        // Затем очищаем кэши (после остановки всех задач)
+        caches.values().forEach(LightCache::shutdown);
+        caches.clear();
+        
+        ConsoleLogger.info("baselibrary", "Cache manager shutdown completed");
     }
     
     /**

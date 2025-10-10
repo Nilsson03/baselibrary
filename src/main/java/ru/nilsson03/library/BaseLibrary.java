@@ -14,7 +14,6 @@ public class BaseLibrary extends JavaPlugin {
     private static BaseLibrary instance;
 
     private Integration integration;
-    private CacheManager cacheManager;
 
     @Override
     public void onEnable() {
@@ -40,9 +39,6 @@ public class BaseLibrary extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (cacheManager != null) {
-            cacheManager.shutdown();
-        }
         ConsoleLogger.unregister(this);
     }
 
@@ -52,9 +48,5 @@ public class BaseLibrary extends JavaPlugin {
 
     public Integration getIntegration() {
         return integration;
-    }
-
-    public CacheManager getCacheManager() {
-        return cacheManager;
     }
 }

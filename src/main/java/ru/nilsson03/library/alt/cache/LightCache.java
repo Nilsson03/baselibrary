@@ -97,15 +97,14 @@ public class LightCache<K, V> {
         totalCleanups++;
         
         if (cache.isEmpty()) {
-            ConsoleLogger.debug("CacheManager", "Cache '%s' is empty, skipping cleanup", name);
+            ConsoleLogger.debug("baselibrary", "Cache '%s' is empty, skipping cleanup", name);
             lastCleanupTime = System.currentTimeMillis() - startTime;
             return;
         }
-
+    
         int initialSize = cache.size();
         long now = System.currentTimeMillis();
         
-        // Удаляем истекшие записи и считаем количество
         final int[] removedCount = {0};
         cache.entrySet().removeIf(entry -> {
             boolean expired = (now - entry.getValue().getAccessTime()) > expireAfterAccess;
@@ -115,15 +114,13 @@ public class LightCache<K, V> {
             return expired;
         });
         
-        // Обновляем статистику
         long cleanupDuration = System.currentTimeMillis() - startTime;
         totalCleanupTime += cleanupDuration;
         totalRemovedEntries += removedCount[0];
         lastCleanupTime = cleanupDuration;
         maxCleanupTime = Math.max(maxCleanupTime, (int) cleanupDuration);
         
-        // Логируем статистику очистки
-        ConsoleLogger.debug("CacheManager", 
+        ConsoleLogger.debug("baselibrary", 
             "Cache '%s' cleanup completed: removed %d/%d entries in %dms (avg: %.2fms, max: %dms)", 
             name, removedCount[0], initialSize, cleanupDuration, 
             (double) totalCleanupTime / totalCleanups, maxCleanupTime);
@@ -134,14 +131,14 @@ public class LightCache<K, V> {
      */
     public void shutdown() {
         cache.clear();
-        ConsoleLogger.debug("CacheManager", "Cache '%s' shutdown completed", name);
+        ConsoleLogger.debug("baselibrary", "Cache '%s' shutdown completed", name);
     }
     
     /**
      * Проверяет, закрыт ли кэш
      */
     public boolean isShutdown() {
-        return scheduler == null || scheduler.isShutdown();
+        return scheduler == null || scheduler.isShutdown() || scheduler.isTerminated();
     }
     
     /**
