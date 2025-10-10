@@ -3,6 +3,7 @@ package ru.nilsson03.library;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import ru.nilsson03.library.alt.cache.CacheManager;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
@@ -13,6 +14,7 @@ public class BaseLibrary extends JavaPlugin {
     private static BaseLibrary instance;
 
     private Integration integration;
+    private CacheManager cacheManager;
 
     @Override
     public void onEnable() {
@@ -38,6 +40,9 @@ public class BaseLibrary extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (cacheManager != null) {
+            cacheManager.shutdown();
+        }
         ConsoleLogger.unregister(this);
     }
 
