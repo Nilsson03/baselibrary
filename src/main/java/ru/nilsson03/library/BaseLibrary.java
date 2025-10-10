@@ -53,4 +53,8 @@ public class BaseLibrary extends JavaPlugin {
     public Integration getIntegration() {
         return integration;
     }
+
+    public CacheManager getCacheManager() {
+        return cacheManager;
+    }
 }
