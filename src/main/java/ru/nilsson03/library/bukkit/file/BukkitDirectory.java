@@ -58,9 +58,23 @@ public class BukkitDirectory {
         this.cached.put(name, config);
     }
 
+    @Nullable
+    public BukkitConfig addNewConfig(String fileName) {
+        Objects.requireNonNull(fileName, "fileName cannot be null");
+
+        if (!containsFileWithName(fileName)) {
+            BukkitConfig config = new BukkitConfig(plugin, this.file, fileName, false);
+            this.cached.put(fileName, config);
+            ConsoleLogger.debug(plugin, "The config file %s is added to directory", fileName);
+            return config;
+        } else {
+            ConsoleLogger.debug(plugin, "The config file %s is already contains in directory", fileName);
+            return null;
+        }
+    }
+
     public boolean containsFileWithName(String fileName) {
         if (cached.isEmpty()) {
-            ConsoleLogger.warn(plugin, "The cached contents of the %s directory are empty!", directoryName);
             return false;
         }
 
@@ -145,6 +159,11 @@ public class BukkitDirectory {
             ConsoleLogger.warn(plugin, "The config file %s was not found in the %s directory!", fileName, directoryName);
             return null;
         }
+    }
+
+    public void addAll(Map<String, BukkitConfig> files) {
+        cached.clear();
+        cached.putAll(files);
     }
 
     public List<BukkitConfig> getCached() {
