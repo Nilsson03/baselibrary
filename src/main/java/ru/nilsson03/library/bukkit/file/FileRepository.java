@@ -58,13 +58,13 @@ public class FileRepository {
             return Optional.empty();
         }
 
-        Map<String, BukkitConfig> files = loadFiles(directoryFile);
+        Map<String, BukkitConfig> files = loadFiles(directoryFile, true, false);
         BukkitDirectory bukkitDirectory = BukkitDirectory.of(plugin, directoryFile, files);
         directories.put(directory, bukkitDirectory);
         return Optional.of(bukkitDirectory);
     }
 
-    private Map<String, BukkitConfig> loadFiles(File dir) {
+    private Map<String, BukkitConfig> loadFiles(File dir, boolean autoParseEnabled, boolean force) {
         Map<String, BukkitConfig> result = new HashMap<>();
         File[] directoryFiles = dir.listFiles();
         if (directoryFiles == null) {
@@ -82,7 +82,7 @@ public class FileRepository {
                 
                 ConsoleLogger.debug(plugin, "Processing file: %s (relative path: %s)", name, relativePath);
                 
-                if (shouldSkipContentParsing(file)) {
+                if (shouldSkipContentParsing(file) && !force) {
                     ConsoleLogger.debug(plugin, "Skipping load of %s (path: %s)", name, relativePath);
                     continue;
                 }
@@ -92,12 +92,19 @@ public class FileRepository {
                 }
                 
                 ConsoleLogger.debug(plugin, "Loading config: %s (path: %s)", name, relativePath);
-                result.put(name, new BukkitConfig(plugin, dir, name));
+                result.put(name, new BukkitConfig(plugin, dir, name, autoParseEnabled));
             }
         }
         
         ConsoleLogger.debug(plugin, "Loaded %d configs from directory: %s", result.size(), dir.getPath());
         return result;
+    }
+
+    public void loadFiles(BukkitDirectory directory, boolean autoParse) {
+        Objects.requireNonNull(directory, "directory cannot be null");
+        Map<String, BukkitConfig> files = loadFiles(directory.getFile(), autoParse, true);
+        directory.addAll(files);
+        ConsoleLogger.debug(plugin, "Loaded %d configs from directory: %s", files.size(), directory.getPath());
     }
 
     public Optional<BukkitConfig> create(BukkitDirectory directory, String fileName) {
@@ -131,8 +138,8 @@ public class FileRepository {
         }
     }
 
+    @Deprecated
     private boolean shouldSkipContentParsing(File file) {
-        // Затем проверяем исключения по полному пути (новая логика)
         File parentDir = file.getParentFile();
         if (shouldSkipFileByPath(file, parentDir)) {
             return true;
