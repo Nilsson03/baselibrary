@@ -11,13 +11,20 @@ public class Switcher {
     private final List<? extends Switchable> variables;
     private int currentPos;
     private final Consumer<Switchable> onSwitch;
+    
+    private final String activeSymbol;
+    private final String inactiveSymbol;
 
     public Switcher(List<? extends Switchable> variables,
                     Switchable initVariable,
-                    Consumer<Switchable> onSwitch) {
+                    Consumer<Switchable> onSwitch,
+                    String activeSymbol,
+                    String inactiveSymbol) {
         this.variables = variables;
         this.onSwitch = onSwitch;
         this.currentPos = findInitialIndex(initVariable);
+        this.activeSymbol = activeSymbol;
+        this.inactiveSymbol = inactiveSymbol;
     }
 
     private int findInitialIndex(Switchable switchable) {
@@ -55,6 +62,6 @@ public class Switcher {
                 .map(Switchable::displayText)
                 .collect(Collectors.toList());
 
-        return UniversalTextApi.getColoredSelectLore(variables, currentPos);
+        return UniversalTextApi.getColoredSelectLore(variables, currentPos, activeSymbol, inactiveSymbol);
     }
 }
