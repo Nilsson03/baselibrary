@@ -3,7 +3,6 @@ package ru.nilsson03.library;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ru.nilsson03.library.alt.cache.CacheManager;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
