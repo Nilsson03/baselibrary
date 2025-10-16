@@ -6,6 +6,7 @@ import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.file.FileHelper;
 import ru.nilsson03.library.bukkit.file.configuration.impl.BukkitConfigurationImpl;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.text.util.ReplaceData;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -160,73 +161,57 @@ public class BukkitConfig {
     public ConfigOperations operations() throws NullPointerException {
         Objects.requireNonNull(configuration, "Configuration cannot be null");
 
+        if (!getBukkitConfiguration().isAutoParseEnabled()) {
+            throw new IllegalStateException("Auto parse is disabled, class " + getClass().getName());
+        }
+
         return getBukkitConfiguration().operations();
     }
 
-    /**
-     * Получает значение типа boolean из конфигурационного файла по указанному пути.
-     * Работает напрямую с FileConfiguration без использования кэшированных данных.
-     *
-     * @param path Путь к значению в YAML файле.
-     * @return Значение boolean или false по умолчанию.
-     */
     public boolean getBoolean(String path) {
-        return fileConfiguration.getBoolean(path);
+        if (fastOperationsIsUnavailable()) {
+            return fileConfiguration.getBoolean(path);
+        }
+        return operations().getBoolean(path);
     }
 
-    /**
-     * Получает значение типа int из конфигурационного файла по указанному пути.
-     * Работает напрямую с FileConfiguration без использования кэшированных данных.
-     *
-     * @param path Путь к значению в YAML файле.
-     * @return Значение int или 0 по умолчанию.
-     */
     public int getInt(String path) {
-        return fileConfiguration.getInt(path);
+        if (fastOperationsIsUnavailable()) {
+            return fileConfiguration.getInt(path);
+        }
+        return operations().getInt(path);
     }
 
-    /**
-     * Получает значение типа long из конфигурационного файла по указанному пути.
-     * Работает напрямую с FileConfiguration без использования кэшированных данных.
-     *
-     * @param path Путь к значению в YAML файле.
-     * @return Значение long или 0 по умолчанию.
-     */
     public long getLong(String path) {
-        return fileConfiguration.getLong(path);
+        if (fastOperationsIsUnavailable()) {
+            return fileConfiguration.getLong(path);
+        }
+        return operations().getLong(path);
     }
 
-    /**
-     * Получает значение типа double из конфигурационного файла по указанному пути.
-     * Работает напрямую с FileConfiguration без использования кэшированных данных.
-     *
-     * @param path Путь к значению в YAML файле.
-     * @return Значение double или 0.0 по умолчанию.
-     */
     public double getDouble(String path) {
-        return fileConfiguration.getDouble(path);
+        if (fastOperationsIsUnavailable()) {
+            return fileConfiguration.getDouble(path);
+        }
+        return operations().getDouble(path);
     }
 
-    /**
-     * Получает список строк из конфигурационного файла по указанному пути.
-     * Работает напрямую с FileConfiguration без использования кэшированных данных.
-     *
-     * @param path Путь к значению в YAML файле.
-     * @return Список строк или пустой список если значение не найдено.
-     */
-    public List<String> getList(String path) {
-        return fileConfiguration.getStringList(path);
+    public List<String> getList(String path, ReplaceData... replaceData) {
+        if (fastOperationsIsUnavailable()) {
+            return fileConfiguration.getStringList(path);
+        }
+        return operations().getList(path, replaceData);
     }
 
-    /**
-     * Получает строку из конфигурационного файла по указанному пути.
-     * Работает напрямую с FileConfiguration без использования кэшированных данных.
-     *
-     * @param path Путь к значению в YAML файле.
-     * @return Строка или null если значение не найдено.
-     */
-    public String getString(String path) {
-        return fileConfiguration.getString(path);
+    public String getString(String path, ReplaceData... replaceData) {
+        if (fastOperationsIsUnavailable()) {
+            return fileConfiguration.getString(path);
+        }
+        return operations().getString(path, replaceData);
+    }
+
+    private boolean fastOperationsIsUnavailable() {
+        return !getBukkitConfiguration().isAutoParseEnabled();
     }
 
     public ConfigurationSection getConfigurationSection(String path) {
