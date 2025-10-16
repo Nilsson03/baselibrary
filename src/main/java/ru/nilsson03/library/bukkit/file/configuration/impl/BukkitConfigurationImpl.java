@@ -69,6 +69,10 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
         load();
     }
 
+    public boolean isAutoParseEnabled() {
+        return autoParseEnabled;
+    }
+
     public FileConfiguration getBukkitConfiguration() {
         return bukkitConfiguration;
     }
