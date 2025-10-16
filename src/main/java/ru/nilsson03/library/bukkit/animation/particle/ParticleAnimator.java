@@ -29,9 +29,8 @@ public class ParticleAnimator {
 
     public void sendParticle(Player player, Particle particle, Location loc) {
         try {
-            plugin.integration().executeOrSkip(() -> particleSender.sendParticle(player, particle, 1, loc),
-                    PacketParticleSender.class.getDeclaredMethod("sendParticle", Player.class, Particle.class, int.class, Location.class));
-        } catch (NoSuchMethodException e) {
+            particleSender.sendParticle(player, particle, 1, loc);
+        } catch (Exception e) {
             ConsoleLogger.error(plugin, "Error sending particle, message %s", e.getMessage());
         }
     }
