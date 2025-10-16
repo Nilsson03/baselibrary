@@ -10,7 +10,6 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import ru.nilsson03.library.BaseLibrary;
 import ru.nilsson03.library.bukkit.integration.DependencyException;
-import ru.nilsson03.library.bukkit.integration.PluginDependency;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.util.Objects;
@@ -23,7 +22,6 @@ public class PacketParticleSender {
 
     }
 
-    @PluginDependency(name = "ProtocolLib", minVersion = "5.3.0", skipIfUnavailable = true)
     public void sendParticle(Player player, Particle particle, int count, Location loc) throws DependencyException {
         Objects.requireNonNull(player, "Player cannot be null");
         Objects.requireNonNull(particle, "Particle cannot be null");
