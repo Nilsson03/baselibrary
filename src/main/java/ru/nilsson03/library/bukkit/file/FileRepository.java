@@ -78,6 +78,13 @@ public class FileRepository {
         for (File file : directoryFiles) {
             if (file.isFile() && file.getName().endsWith(".yml")) {
                 String name = file.getName();
+                
+                // Проверяем, что имя файла не пустое
+                if (name == null || name.trim().isEmpty()) {
+                    ConsoleLogger.warn(plugin, "Skipping file with empty name in directory: %s", dir.getPath());
+                    continue;
+                }
+                
                 String relativePath = getRelativePathFromPluginRoot(file, dir);
                 
                 ConsoleLogger.debug(plugin, "Processing file: %s (relative path: %s)", name, relativePath);
