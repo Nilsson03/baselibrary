@@ -4,6 +4,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import ru.nilsson03.library.NPlugin;
+import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.io.File;
@@ -169,17 +170,26 @@ public class FileHelper {
     /**
      * Перезагружает конфигурацию из файла.
      *
-     * @param nPlugin плагин
+     * @param plugin плагин
+     * @param config конфигурация
      * @return Перезагруженная FileConfiguration.
      */
-    public static FileConfiguration reloadFile(NPlugin nPlugin, FileConfiguration configuration) {
-        Objects.requireNonNull(nPlugin, "plugin cannot be null");
-        Objects.requireNonNull(configuration, "configuration cannot be null");
+    public static FileConfiguration reloadFile(NPlugin plugin, BukkitConfig config) {
+        Objects.requireNonNull(plugin, "plugin cannot be null");
+        Objects.requireNonNull(config, "configuration cannot be null");
 
-        String fileName = configuration.getName();
-        saveFile(configuration, nPlugin.getDataFolder(), fileName);
-        ConsoleLogger.debug(nPlugin, "The file %s has been successfully reloaded.", fileName);
-        return loadConfiguration(nPlugin, fileName);
+        File directory = config.getDirectory();
+        String fileName = config.getName();
+        File configFile = new File(directory, fileName);
+
+        if (!configFile.exists()) {
+            ConsoleLogger.warn(plugin, "Config file %s does not exist, cannot reload", fileName);
+            return config.getFileConfiguration();
+        }
+
+        FileConfiguration reloadedConfig = YamlConfiguration.loadConfiguration(configFile);
+        ConsoleLogger.debug(plugin, "The file %s has been successfully reloaded from disk.", fileName);
+        return reloadedConfig;
     }
 
     /**
