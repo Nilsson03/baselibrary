@@ -22,6 +22,7 @@ public class BukkitConfig {
 
     private final String name;
     private final File file;
+    private final File directory;
     private BukkitConfigurationImpl configuration;
     private FileConfiguration fileConfiguration;
     private final NPlugin plugin;
@@ -50,6 +51,7 @@ public class BukkitConfig {
             processedFileName = fileName + ".yml";
         }
         
+        this.directory = directory;
         this.file = new File(directory, processedFileName);
         this.name = processedFileName;
 
@@ -96,14 +98,14 @@ public class BukkitConfig {
     }
 
     public void reloadConfiguration() {
-        FileConfiguration updatedConfiguration = FileHelper.reloadFile(getPlugin(), fileConfiguration);
+        FileConfiguration updatedConfiguration = FileHelper.reloadFile(getPlugin(), this);
         updateFileConfiguration(updatedConfiguration);
     }
 
     public void updateFileConfiguration(FileConfiguration fileConfiguration) {
         Objects.requireNonNull(fileConfiguration, "configuration cannot be null");
         this.fileConfiguration = fileConfiguration;
-        configuration.clearFileContentAndLoad();
+        configuration.clearFileContentAndLoad(fileConfiguration);
         ConsoleLogger.debug(plugin, "File %s has been loaded (Class %s).",
                 file.getName(),
                 this.getClass().getName());
@@ -237,5 +239,9 @@ public class BukkitConfig {
     @Deprecated
     public FileConfiguration getConfiguration() {
         return fileConfiguration;
+    }
+
+    public File getDirectory() {
+        return directory;
     }
 }
