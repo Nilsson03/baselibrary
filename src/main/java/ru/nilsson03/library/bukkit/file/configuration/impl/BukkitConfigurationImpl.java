@@ -16,7 +16,7 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
     private final NPlugin plugin;
     private final String fileName;
     private final Map<String, String> fileContent;
-    private final FileConfiguration bukkitConfiguration;
+    private FileConfiguration bukkitConfiguration;
     private ConfigOperations configOperations;
     private final boolean autoParseEnabled;
 
@@ -58,13 +58,13 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
         }
     }
 
-    public void clearFileContentAndLoad() {
+    public void clearFileContentAndLoad(FileConfiguration fileConfiguration) {
 
         if (!autoParseEnabled) {
             ConsoleLogger.warn(plugin, "Auto-parsing disabled for configuration file: %s", fileName);
             return;
         }
-
+        this.bukkitConfiguration = fileConfiguration;
         fileContent.clear();
         load();
     }
