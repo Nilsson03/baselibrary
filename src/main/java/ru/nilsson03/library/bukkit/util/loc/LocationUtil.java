@@ -49,8 +49,8 @@ public class LocationUtil {
         double newHeight = location.getY() + BASE_HEIGHT + lineCount * HEIGHT_INCREASE_PER_LINE;
         Location newLocation = location.clone();
         newLocation.setY(newHeight);
-        newLocation.setX(location.getX());
-        newLocation.setZ(location.getZ());
+        newLocation.setX(location.getX() + 0.5);
+        newLocation.setZ(location.getZ() + 0.5);
         return newLocation;
     }
 
