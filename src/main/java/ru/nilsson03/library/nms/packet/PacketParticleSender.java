@@ -31,7 +31,6 @@ public class PacketParticleSender {
         }
 
         try {
-            // Создание и настройка пакета
             PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.WORLD_PARTICLES);
 
             WrappedParticle<?> wrappedParticle = WrappedParticle.create(particle, null);

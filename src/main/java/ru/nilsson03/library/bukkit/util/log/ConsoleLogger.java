@@ -30,6 +30,8 @@ public final class ConsoleLogger {
             Logger logger = new Logger(plugin);
             logger.initialize();
             LOGGERS.put(lowerPluginName, logger);
+        } else {
+            ConsoleLogger.info(plugin, "ConsoleLogger is registered without writing events to files.");
         }
         ConsoleLogger.info(plugin, "Success registered ConsoleLogger.");
     }

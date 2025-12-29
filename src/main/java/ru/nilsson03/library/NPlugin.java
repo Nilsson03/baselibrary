@@ -26,7 +26,8 @@ public abstract class NPlugin extends JavaPlugin {
                 throw new IllegalStateException("BaseLibrary not initialized");
             }
 
-            ConsoleLogger.register(this);
+            boolean writeLogs = getConfig().getBoolean("writeLogs", false);
+            ConsoleLogger.register(this, writeLogs);
             integration = new Integration(this);
             fileRepository = new FileRepository(this);
             notificationService = new PlayerNotificationService();
