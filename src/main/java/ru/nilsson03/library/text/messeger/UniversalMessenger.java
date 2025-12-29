@@ -10,11 +10,24 @@ import ru.nilsson03.library.bukkit.bar.UniversalActionBar;
 import ru.nilsson03.library.bukkit.util.SoundUtils;
 import ru.nilsson03.library.text.api.UniversalTextApi;
 import ru.nilsson03.library.text.util.ChatFormatter;
+import ru.nilsson03.library.text.util.ReplaceData;
 
 public class UniversalMessenger {
     private static final Pattern SOUND_PATTERN = Pattern.compile("^sound:(.+)$");
     private static final Pattern TITLE_PATTERN = Pattern.compile("^title:(.+)$");
     private static final Pattern ACTIONBAR_PATTERN = Pattern.compile("^actionbar:(.+)$");
+
+    public static void send(CommandSender sender, String message, ReplaceData... replacements) {
+        for (ReplaceData replacement : replacements) {
+            message = message.replace(replacement.getKey(), replacement.getObject().toString());
+        }
+        
+        if (sender instanceof Player player) {
+            sendToPlayer(player, message);
+        } else {
+            sender.sendMessage(UniversalTextApi.colorize(message));
+        }
+    }
 
     public static void send(CommandSender sender, String message) {
         if (sender instanceof Player player) {
@@ -22,6 +35,10 @@ public class UniversalMessenger {
         } else {
             sender.sendMessage(UniversalTextApi.colorize(message));
         }
+    }
+
+    public static void send(Player sender, String message) {
+        sendToPlayer(sender, message);
     }
 
     public static void send(CommandSender sender, List<String> messages) {
