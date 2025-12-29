@@ -17,6 +17,7 @@ public class BaseLibrary extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        this.saveDefaultConfig();
 
         ServerVersion currentVersion = ServerVersionUtils.getServerVersion();
 
@@ -26,7 +27,8 @@ public class BaseLibrary extends JavaPlugin {
             return;
         }
 
-        ConsoleLogger.register(this);
+        boolean writeLogs = getConfig().getBoolean("writeLogs", false);
+        ConsoleLogger.register(this, writeLogs);
 
         integration = new Integration(this);
 
