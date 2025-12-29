@@ -58,7 +58,6 @@ public final class Namespace {
      * @param pluginName Имя плагина, к которому привязан namespace.
      * @param key Уникальный ключ для типа региона.
      * @return Существующий или новый Namespace.
-     * @throws IllegalArgumentException Если namespace с таким ключом уже существует для данного плагина.
      */
     public static Namespace of(String pluginName, String key) {
         synchronized (pluginNamespacesCache) {
@@ -67,9 +66,7 @@ public final class Namespace {
             );
 
             if (pluginNamespaces.containsKey(key)) {
-                throw new IllegalArgumentException(
-                        "Namespace with key '" + key + "' already exists for plugin '" + pluginName + "'"
-                );
+                return pluginNamespaces.get(key);
             }
 
             Namespace namespace = new Namespace(pluginName, key);
