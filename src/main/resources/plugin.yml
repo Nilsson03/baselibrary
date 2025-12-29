@@ -3,4 +3,6 @@ version: '${project.version}'
 main: ru.nilsson03.library.BaseLibrary
 api-version: 1.16
 authors: [Nilsson03]
+depend: 
+  - ProtocolLib
 description: "The library used for plugins written by Nilsson03."
