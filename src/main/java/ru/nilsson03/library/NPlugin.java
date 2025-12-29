@@ -25,7 +25,7 @@ public abstract class NPlugin extends JavaPlugin {
                 getLogger().severe("Failed to load NPlugin because BaseLibrary is not initialized");
                 throw new IllegalStateException("BaseLibrary not initialized");
             }
-
+            this.saveDefaultConfig();
             boolean writeLogs = getConfig().getBoolean("writeLogs", false);
             ConsoleLogger.register(this, writeLogs);
             integration = new Integration(this);
