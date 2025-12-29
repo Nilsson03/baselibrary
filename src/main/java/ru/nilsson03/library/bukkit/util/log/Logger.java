@@ -12,6 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Logger {
 
@@ -20,6 +23,7 @@ public class Logger {
     private final JavaPlugin plugin;
 
     private BufferedWriter writer;
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Logger(JavaPlugin plugin) {
@@ -47,7 +51,9 @@ public class Logger {
                 logFile.createNewFile();
             }
             writer = new BufferedWriter(new FileWriter(logFile, true));
-            log(LogLevel.INFO, "Successful integration of the logging system with the %s plugin. Server Details: %s version, server core: %s", plugin.getName(), ServerVersionUtils.getServerVersion().name(), Bukkit.getName());
+            log(LogLevel.INFO,
+                    "Successful integration of the logging system with the %s plugin. Server Details: %s version, server core: %s",
+                    plugin.getName(), ServerVersionUtils.getServerVersion().name(), Bukkit.getName());
         } catch (IOException e) {
             ConsoleLogger.error(plugin, "The log file could not be created due to %s", e.getMessage());
         }
@@ -55,28 +61,45 @@ public class Logger {
 
     public void close() {
         try {
+            ioExecutor.shutdown();
+            if (!ioExecutor.awaitTermination(3, TimeUnit.SECONDS)) {
+                ioExecutor.shutdownNow();
+            }
             if (writer != null) {
                 writer.close();
             }
         } catch (IOException e) {
-            ConsoleLogger.error(plugin, "An error occurred when closing the event log file, the reason is: %s", e.getMessage());
+            ConsoleLogger.error(plugin, "An error occurred when closing the event log file, the reason is: %s",
+                    e.getMessage());
+        } catch (InterruptedException e) {
+            ConsoleLogger.error(plugin, "An error occurred when closing the event log thread, reason: %s",
+                    e.getMessage());
         }
     }
 
     public void log(LogLevel level, String message, Object... objects) {
-        try {
-            String formattedMessage = String.format(
-                    "[%s] [%s] %s",
-                    dateFormat.format(new Date()),
-                    level.name(),
-                    String.format(message, objects)
-            );
-
-            writer.write(formattedMessage);
-            writer.newLine();
-            writer.flush();
-        } catch (IOException e) {
-            Bukkit.getConsoleSender().sendMessage("An error occurred when writing to the event log: " +  e.getMessage());
+        if (writer == null || ioExecutor == null) {
+            ConsoleLogger.error(plugin, "An error occurred when logging, the reason is: %s",
+                    "Writer or ioExecutor is null");
+            return;
         }
+
+        if (ioExecutor.isShutdown()) return;
+
+        String formattedMessage = String.format(
+                "[%s] [%s] %s",
+                dateFormat.format(new Date()),
+                level.name(),
+                String.format(message, objects)
+        );
+        ioExecutor.execute(() -> {
+            try {
+                writer.write(formattedMessage);
+                writer.newLine();
+                writer.flush();
+            } catch (IOException e) {
+                Bukkit.getConsoleSender().sendMessage("An error occurred when writing to the event log: " + e.getMessage());
+            }
+        });
     }
 }

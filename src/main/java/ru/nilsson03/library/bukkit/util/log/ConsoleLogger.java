@@ -16,17 +16,21 @@ public final class ConsoleLogger {
     private static final Map<String, Logger> LOGGERS = new HashMap<>();
     private static final String DEFAULT_PREFIX = "§6System";
 
+    private static boolean writeLogs;
+
     static {
-        // Инициализация для системных сообщений
         PLUGIN_PREFIXES.put("system", DEFAULT_PREFIX);
     }
 
-    public static void register(JavaPlugin plugin) {
+    public static void register(JavaPlugin plugin, boolean writeLogs) {
+        ConsoleLogger.writeLogs = writeLogs;
         String lowerPluginName = plugin.getName().toLowerCase();
         PLUGIN_PREFIXES.put(lowerPluginName, mainPrefixColor + plugin.getName());
-        Logger logger = new Logger(plugin);
-        logger.initialize();
-        LOGGERS.put(lowerPluginName, logger);
+        if (writeLogs) {
+            Logger logger = new Logger(plugin);
+            logger.initialize();
+            LOGGERS.put(lowerPluginName, logger);
+        }
         ConsoleLogger.info(plugin, "Success registered ConsoleLogger.");
     }
 
@@ -63,7 +67,6 @@ public final class ConsoleLogger {
         log(plugin.getName(), level, format, args);
     }
 
-    // Альтернативные методы без JavaPlugin
     public static void info(String pluginName, String format, Object... args) {
         log(pluginName, LogLevel.INFO, format, args);
     }
@@ -99,6 +102,9 @@ public final class ConsoleLogger {
 
         if (level != LogLevel.DEBUG)
             Bukkit.getConsoleSender().sendMessage(formatted);
+
+        if (!writeLogs)
+            return;
 
         if (level == LogLevel.ERROR || level == LogLevel.WARNING || level == LogLevel.DEBUG) {
             if (LOGGERS.containsKey(pluginName)) {
