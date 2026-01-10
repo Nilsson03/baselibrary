@@ -112,9 +112,6 @@ public final class ConsoleLogger {
             if (LOGGERS.containsKey(pluginName)) {
                 Logger logger = LOGGERS.get(pluginName);
                 logger.log(level, format, args);
-            } else {
-                Bukkit.getConsoleSender().sendMessage("Cant write message to file because Logger object is null for plugin " +
-                        pluginName + ".");
             }
         }
     }

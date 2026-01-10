@@ -19,6 +19,8 @@ public abstract class NPlugin extends JavaPlugin {
 
     @Override
     public final void onEnable() {
+        this.saveDefaultConfig();
+        boolean debug = getConfig().getBoolean("debug", false);
         try {
             this.baseLibrary = BaseLibrary.getInstance();
             if (baseLibrary == null) {
@@ -36,6 +38,9 @@ public abstract class NPlugin extends JavaPlugin {
             ConsoleLogger.info(this, "%s plugin loaded successfully.", getDescription().getName());
         } catch (Exception e) {
             ConsoleLogger.error(baseLibrary, "Failed to enable %s plugin, reason: %s", getDescription().getName(), e.getMessage());
+            if (debug) {
+                e.printStackTrace();
+            }
             getServer().getPluginManager().disablePlugin(this);
         }
     }
