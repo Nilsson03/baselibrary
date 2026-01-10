@@ -44,8 +44,14 @@ public class ParameterFile {
 
     private void loadParameters() {
         for (String key : fileConfiguration.getKeys(true)) {
-            String value = fileConfiguration.getString(key);
-            parameters.put(key, Parameter.fromString(value));
+            Object value = fileConfiguration.get(key);
+            if (value != null) {
+                try {
+                    parameters.put(key, new Parameter(value));
+                } catch (IllegalArgumentException e) {
+                    ConsoleLogger.warn(plugin, "Failed to load parameter '%s' from %s: %s", key, fileName, e.getMessage());
+                }
+            }
         }
     }
 
@@ -57,6 +63,12 @@ public class ParameterFile {
         Parameter param = getParameter(key)
                 .orElseThrow( () -> new IllegalArgumentException("Parameter not found: " + key + " in " + fileName));
         return param != null ? param.getValueAs(type) : null;
+    }
+
+    public Object get(String key) {
+        return getParameter(key)
+                .map(Parameter::getRawValue)
+                .orElse(null);
     }
 
     public <T> void setValue(String key, T value) {

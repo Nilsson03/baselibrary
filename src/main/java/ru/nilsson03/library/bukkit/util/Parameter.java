@@ -58,38 +58,25 @@ public final class Parameter {
         }
 
         try {
-            if (targetType == Integer.class) {
-                return targetType.cast(parseInt());
-            } else if (targetType == Boolean.class) {
-                return targetType.cast(parseBoolean());
-            } else if (targetType == Long.class) {
-                return targetType.cast(parseLong());
-            } else if (targetType == Double.class) {
-                return targetType.cast(parseDouble());
+            if (targetType == Integer.class || targetType == int.class) {
+                return (R) parseInt();
+            } else if (targetType == Boolean.class || targetType == boolean.class) {
+                return (R) parseBoolean();
+            } else if (targetType == Long.class || targetType == long.class) {
+                return (R) parseLong();
+            } else if (targetType == Double.class || targetType == double.class) {
+                return (R) parseDouble();
+            } else if (targetType == Float.class || targetType == float.class) {
+                return (R) parseFloat();
             } else if (targetType == String.class) {
-                return targetType.cast(value.toString());
-            } else if (targetType == List.class) {
-                    String value = getValueAs(String.class);
-                    if (value.startsWith("[")) {
-                        value = value.substring(1);
-                    }
-                    if (value.endsWith("]")) {
-                        value = value.substring(0, value.length() - 1);
-                    }
-                    List<String> list = new ArrayList<>(Arrays.asList(value.split(", ")));
-                    return targetType.cast(list);
-            } else if (targetType == Map.class) {
-                if (value instanceof Map) {
-                    return targetType.cast(value);
-                }
+                return (R) value.toString();
+            } else if (List.class.isAssignableFrom(targetType)) {
+                return (R) parseList();
+            } else if (Map.class.isAssignableFrom(targetType)) {
+                return (R) parseMap();
+            } else if (ConfigurationSection.class.isAssignableFrom(targetType)) {
                 if (value instanceof ConfigurationSection) {
-                    ConfigurationSection section = (ConfigurationSection) value;
-                    Map<String, Object> map = section.getValues(false);
-                    return targetType.cast(map);
-                }
-            } else if (targetType == ConfigurationSection.class) {
-                if (value instanceof ConfigurationSection) {
-                    return targetType.cast(value);
+                    return (R) value;
                 }
             }
         } catch (Exception e) {
@@ -99,6 +86,30 @@ public final class Parameter {
 
         ConsoleLogger.debug("baselibrary", "Unsupported target type %s when converting to Parameter", targetType.getName());
         throw new IllegalArgumentException("Unsupported target type: " + targetType.getName());
+    }
+
+    private List<String> parseList() {
+        String value = getValueAs(String.class);
+        if (value.startsWith("[")) value = value.substring(1);
+        if (value.endsWith("]")) value = value.substring(0, value.length() - 1);
+        return new ArrayList<>(Arrays.asList(value.split(", ")));
+    }
+
+    private Map<String, Object> parseMap() {
+        if (value instanceof Map) {
+            return (Map<String, Object>) value;
+        }
+        if (value instanceof ConfigurationSection) {
+            return ((ConfigurationSection) value).getValues(false);
+        }
+        throw new IllegalArgumentException("Cannot convert to Map");
+    }
+
+    private Float parseFloat() {
+        if (value instanceof Number) {
+            return ((Number) value).floatValue();
+        }
+        return Float.parseFloat(value.toString());
     }
 
     /**
