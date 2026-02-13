@@ -11,7 +11,6 @@ import java.util.List;
 
 public final class ClickableMessage {
     private final TextComponent root;
-
     private final List<TextComponent> parts;
     private final List<Button> buttonParts;
 
@@ -19,15 +18,51 @@ public final class ClickableMessage {
         this.root = new TextComponent("");
         this.parts = new ArrayList<>();
         this.buttonParts = new ArrayList<>();
+
+        if (text != null && !text.isEmpty()) {
+            this.appendText(text);
+        }
+    }
+
+    private ClickableMessage(List<String> lines) {
+        this.root = new TextComponent("");
+        this.parts = new ArrayList<>();
+        this.buttonParts = new ArrayList<>();
+
+        if (lines != null && !lines.isEmpty()) {
+            this.appendLines(lines);
+        }
     }
 
     public static ClickableMessage of(String text) {
         return new ClickableMessage(text);
     }
 
-    /**
-     * Добавляет произвольный текст (без клика) в конец сообщения.
-     */
+    public static ClickableMessage of(List<String> lines) {
+        return new ClickableMessage(lines);
+    }
+
+    public ClickableMessage appendLines(List<String> lines) {
+        if (lines == null || lines.isEmpty()) {
+            return this;
+        }
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line != null && !line.isEmpty()) {
+                this.appendText(line);
+                if (i < lines.size() - 1) {
+                    this.appendNewLine();
+                }
+            }
+        }
+        return this;
+    }
+
+    public ClickableMessage appendNewLine() {
+        return this.appendText("\n");
+    }
+
     public ClickableMessage appendText(String text) {
         if (text == null || text.isEmpty()) {
             return this;
@@ -52,13 +87,18 @@ public final class ClickableMessage {
             ));
         }
 
-        // ClickAction будет привязан в build(player), когда станет известен игрок
         if (action != null) {
             this.buttonParts.add(new Button(button, action));
         }
 
         this.parts.add(button);
         return this;
+    }
+
+    @SuppressWarnings("deprecation")
+    public ClickableMessage appendButtonLine(String buttonText, String hoverText, ClickAction action) {
+        this.appendNewLine();
+        return this.appendButton(buttonText, hoverText, action);
     }
 
     public BaseComponent[] build(Player player) {
