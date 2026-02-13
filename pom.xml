@@ -113,6 +113,12 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>ru.nilsson03</groupId>
+            <artifactId>InvUI</artifactId>
+            <version>v1.46</version>
+        </dependency>
+
         <!-- WorldEdit 1.16.5 dependency -->
         <dependency>
             <groupId>com.sk89q.worldedit</groupId>
