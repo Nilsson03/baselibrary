@@ -6,7 +6,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
+import ru.nilsson03.library.bukkit.util.TranslationUtil;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.text.component.action.ClickActionRegistry;
 
 public class BaseLibrary extends JavaPlugin {
 
@@ -31,6 +33,11 @@ public class BaseLibrary extends JavaPlugin {
         ConsoleLogger.register(this, writeLogs);
 
         integration = new Integration(this);
+        ClickActionRegistry.register(this);
+
+        TranslationUtil.initialize(this);
+        TranslationUtil.loadTranslations("ru");
+        TranslationUtil.setDefaultLanguage("ru");
 
         ConsoleLogger.info(this, "BaseLibrary version %s has been successfully enabled.", getDescription().getVersion());
         ConsoleLogger.info(this, "The server version used is %s on %s", currentVersion.name(), Bukkit.getName());
