@@ -49,6 +49,7 @@ public abstract class NPlugin extends JavaPlugin {
     public final void onDisable() {
         try {
             disable();
+            fileRepository.unregister();
             ConsoleLogger.unregister(this);
             getLogger().info(getDescription().getName() + " disabled!");
         } catch (Exception e) {

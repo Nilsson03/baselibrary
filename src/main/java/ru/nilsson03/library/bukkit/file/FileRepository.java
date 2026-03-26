@@ -35,6 +35,14 @@ public class FileRepository {
         initializationMap.put(plugin, this);
     }
 
+    public void unregister() {
+        if (initializationMap.containsKey(plugin)) {
+            directories.clear();
+            excludedPaths.clear();
+            initializationMap.remove(plugin);
+        }
+    }
+
     public Optional<BukkitDirectory> getDirectoryOrLoad(String directoryName) {
         if (directories.containsKey(directoryName)) {
             return Optional.of(directories.get(directoryName));

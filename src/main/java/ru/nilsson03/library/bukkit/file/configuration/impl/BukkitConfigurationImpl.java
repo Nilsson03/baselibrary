@@ -59,14 +59,13 @@ public class BukkitConfigurationImpl implements BukkitConfiguration {
     }
 
     public void clearFileContentAndLoad(FileConfiguration fileConfiguration) {
-
         if (!autoParseEnabled) {
             ConsoleLogger.warn(plugin, "Auto-parsing disabled for configuration file: %s", fileName);
             return;
         }
         this.bukkitConfiguration = fileConfiguration;
-        fileContent.clear();
         load();
+        this.configOperations = new ConfigOperations(fileContent);
     }
 
     public boolean isAutoParseEnabled() {

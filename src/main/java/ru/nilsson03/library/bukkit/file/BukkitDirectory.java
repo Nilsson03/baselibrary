@@ -124,12 +124,12 @@ public class BukkitDirectory {
                 reloadedFiles++;
             } catch (Exception e) {
                 failedFiles++;
-                ConsoleLogger.warn(plugin, "Failed to reload config %s in directory %s: %s", 
+                ConsoleLogger.warn(plugin, "Failed to reload config %s in directory %s: %s",
                                  config.getName(), directoryName, e.getMessage());
             }
         }
 
-        ConsoleLogger.info(plugin, "Reloaded %d/%d config files in directory %s (failed: %d)", 
+        ConsoleLogger.info(plugin, "Reloaded %d/%d config files in directory %s (failed: %d)",
                          reloadedFiles, totalFiles, directoryName, failedFiles);
     }
 
@@ -164,6 +164,10 @@ public class BukkitDirectory {
     public void addAll(Map<String, BukkitConfig> files) {
         cached.clear();
         cached.putAll(files);
+    }
+
+    public void saveAll() {
+        cached.values().forEach(BukkitConfig::saveConfiguration);
     }
 
     public List<BukkitConfig> getCached() {
