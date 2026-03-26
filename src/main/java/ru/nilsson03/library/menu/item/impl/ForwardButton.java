@@ -1,7 +1,9 @@
 package ru.nilsson03.library.menu.item.impl;
 
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.file.configuration.ParameterFile;
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
@@ -15,27 +17,33 @@ import java.util.List;
 
 public class ForwardButton extends PageItem {
 
-    private final ParameterFile config;
+    private final FileConfiguration config;
 
+    @Deprecated
     public ForwardButton(ParameterFile config) {
         super(true);
-        this.config = config;
+        this.config = config.getFileConfiguration();
+    }
+
+    public ForwardButton(BukkitConfig config) {
+        super(true);
+        this.config = config.getFileConfiguration();
     }
 
     public ItemProvider getItemProvider(PagedGui<?> gui) {
-        String type = config.getValueAs("inventories.buttons.forward-button.type", String.class);
-        String displayName = UniversalTextApi.colorize(config.getValueAs("inventories.buttons.forward-button.name", String.class));
-        List<String> lore = UniversalTextApi.colorize(config.getValueAs("inventories.buttons.forward-button.lore", List.class));
+        String type = config.getString("inventories.buttons.forward-button.type");
+        String displayName = UniversalTextApi.colorize(config.getString("inventories.buttons.forward-button.name"));
+        List<String> lore = UniversalTextApi.colorize(config.getStringList("inventories.buttons.forward-button.lore"));
 
         ItemStack itemStack;
         if (type.equalsIgnoreCase("head")) {
-            String url = config.getValueAs("inventories.buttons.forward-button.head-id", String.class);
+            String url = config.getString("inventories.buttons.forward-button.head-id");
             itemStack = ItemUtil.createHead(url)
                     .setDisplayName(displayName)
                     .setLore(lore)
                     .build();
         } else {
-            String materialName = config.getValueAs("inventories.buttons.forward-button.material", String.class);
+            String materialName = config.getString("inventories.buttons.forward-button.material");
             itemStack = new SpigotItemBuilder(Material.valueOf(materialName))
                     .setDisplayName(displayName)
                     .setLore(lore)

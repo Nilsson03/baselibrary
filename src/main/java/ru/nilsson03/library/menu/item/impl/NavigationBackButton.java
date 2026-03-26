@@ -35,13 +35,13 @@ public class NavigationBackButton extends SimpleItem {
     }
 
     private static ItemProvider getBackButtonItemProvider(FileConfiguration config) {
-        String type = config.getString("inventories.buttons.back-button.type", "material");
-        String displayName = config.getString("inventories.buttons.back-button.name");
+        String type = config.getString("inventories.buttons.previous-button.type", "material");
+        String displayName = config.getString("inventories.buttons.previous-button.name");
         if (displayName != null) {
             displayName = UniversalTextApi.colorize(displayName);
         }
         
-        List<String> lore = config.getStringList("inventories.buttons.back-button.lore");
+        List<String> lore = config.getStringList("inventories.buttons.previous-button.lore");
         if (lore != null && !lore.isEmpty()) {
             lore = lore.stream()
                     .map(UniversalTextApi::colorize)
@@ -50,13 +50,13 @@ public class NavigationBackButton extends SimpleItem {
 
         ItemStack itemStack;
         if (type.equalsIgnoreCase("head")) {
-            String url = config.getString("inventories.buttons.back-button.head-id", "");
+            String url = config.getString("inventories.buttons.previous-button.head-id", "");
             itemStack = ItemUtil.createHead(url)
                     .setDisplayName(displayName)
                     .setLore(lore)
                     .build();
         } else {
-            String materialName = config.getString("inventories.buttons.back-button.material", "ARROW");
+            String materialName = config.getString("inventories.buttons.previous-button.material", "ARROW");
             itemStack = new SpigotItemBuilder(Material.valueOf(materialName))
                     .setDisplayName(displayName)
                     .setLore(lore)
