@@ -30,10 +30,6 @@ public class MenuUtil {
         for (String key : keys) {
             ConfigurationSection itemConfig = section.getConfigurationSection(key);
             if (itemConfig != null) {
-                if (key.equalsIgnoreCase("back_button") || key.equalsIgnoreCase("navigation_back")) {
-                    continue;
-                }
-                
                 boolean update = itemConfig.getBoolean("update", false);
                 CustomItem item = update 
                     ? new UpdatableCustomItem(itemConfig, replacesData)
