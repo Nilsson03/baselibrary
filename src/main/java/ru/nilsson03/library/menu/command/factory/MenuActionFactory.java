@@ -2,9 +2,10 @@ package ru.nilsson03.library.menu.command.factory;
 
 import org.bukkit.configuration.ConfigurationSection;
 import ru.nilsson03.library.menu.command.MenuAction;
+import ru.nilsson03.library.menu.command.impl.CloseMenuAction;
 import ru.nilsson03.library.menu.command.impl.ConsoleMenuAction;
 import ru.nilsson03.library.menu.command.impl.PlayerMenuAction;
-import ru.nilsson03.library.menu.command.impl.PreviousMenuMenuAction;
+import ru.nilsson03.library.menu.command.impl.PreviousMenuAction;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -24,7 +25,9 @@ public class MenuActionFactory {
         registerParser(Pattern.compile("^\\[player\\]\\s*(.+)$", Pattern.CASE_INSENSITIVE),
                 PlayerMenuAction::new);
         registerParser(Pattern.compile("^\\[previous_menu\\]\\s*$", Pattern.CASE_INSENSITIVE),
-                command -> new PreviousMenuMenuAction());
+                command -> new PreviousMenuAction());
+        registerParser(Pattern.compile("^\\[close\\]\\s*$", Pattern.CASE_INSENSITIVE),
+                command -> new CloseMenuAction());
         registerDefaultParser(command -> new PlayerMenuAction(command) {
         });
     }
