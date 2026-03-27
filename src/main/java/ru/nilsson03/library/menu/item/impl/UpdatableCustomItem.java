@@ -9,6 +9,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
+import ru.nilsson03.library.menu.command.MenuAction;
+import ru.nilsson03.library.menu.command.factory.MenuActionFactory;
 import ru.nilsson03.library.menu.item.CustomItem;
 import ru.nilsson03.library.text.api.UniversalTextApi;
 import ru.nilsson03.library.text.util.ReplaceData;
@@ -23,6 +25,7 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
     private final ConfigurationSection section;
     private final char c;
     private final Consumer<StaticCustomItem.ClickContext> clickHandler;
+    private final List<MenuAction> actions;
 
     public UpdatableCustomItem(ConfigurationSection section, ReplaceData... replacesData) {
         this(section, null, replacesData);
@@ -62,6 +65,7 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
         this.clickHandler = clickHandler;
         this.section = section;
         c = section.getString("position").charAt(0);
+        this.actions = MenuActionFactory.createFromSection(section);
     }
 
     @Override
@@ -79,6 +83,11 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
         super.handleClick(clickType, player, event);
         if (clickHandler != null) {
             clickHandler.accept(new StaticCustomItem.ClickContext(clickType, player, event));
+        }
+        if (actions != null && !actions.isEmpty())  {
+            for (MenuAction action : actions) {
+                action.execute(player);
+            }
         }
     }
 
