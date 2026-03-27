@@ -16,6 +16,6 @@ public class ConsoleMenuAction implements MenuAction {
 
     @Override
     public void execute(Player player) {
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), clickCommand);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), clickCommand.replace("{player}", player.getName()));
     }
 }
