@@ -4,6 +4,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 import ru.nilsson03.library.text.api.UniversalTextApi;
@@ -99,6 +100,14 @@ public class TranslationUtil {
     public static String translateMaterial(Material material, String language) {
         if (material == null) return "";
         return getTranslation(language, "items." + material.name(), formatName(material.name()));
+    }
+
+    public static String translatePotion(PotionEffectType type, String language) {
+        return getTranslation(language, "items.POTION.EFFECT." + type.getName());
+    }
+
+    public static String translatePotion(PotionEffectType type) {
+        return getTranslation(getDefaultLanguage(), "items.POTION.EFFECT." + type.getName());
     }
 
     /**
