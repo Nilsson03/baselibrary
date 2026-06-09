@@ -54,7 +54,7 @@ public class UniversalMessenger {
             } else if (TITLE_PATTERN.matcher(part).matches()) {
                 handleTitle(player, part.substring(6));
             } else if (ACTIONBAR_PATTERN.matcher(part).matches()) {
-                handleActionBar(player, part.substring(10));
+                player.sendActionBar(UniversalTextApi.colorize(part.substring(10)));
             } else if (!part.trim().isEmpty()) {
                 part = ChatFormatter.centerText(part);
                 player.sendMessage(UniversalTextApi.colorize(part));
