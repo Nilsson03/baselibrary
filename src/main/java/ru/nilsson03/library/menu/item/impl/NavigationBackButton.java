@@ -1,18 +1,21 @@
 package ru.nilsson03.library.menu.item.impl;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
+import ru.nilsson03.library.invui.item.ItemProvider;
+import ru.nilsson03.library.invui.item.builder.ItemBuilder;
+import ru.nilsson03.library.invui.item.impl.SimpleItem;
 import ru.nilsson03.library.menu.MenuHistoryManager;
 import ru.nilsson03.library.text.api.UniversalTextApi;
-import xyz.xenondevs.invui.item.ItemProvider;
-import xyz.xenondevs.invui.item.builder.ItemBuilder;
-import xyz.xenondevs.invui.item.impl.SimpleItem;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +29,18 @@ public class NavigationBackButton extends SimpleItem {
     @Override
     public void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {
         event.setCancelled(true);
+        event.setResult(Event.Result.DENY);
+        
+        InventoryAction action = event.getAction();
+        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY || 
+            action == InventoryAction.COLLECT_TO_CURSOR ||
+            clickType.isShiftClick()) {
+            event.setCurrentItem(null);
+            event.setCursor(null);
+            Bukkit.getScheduler().runTask(ru.nilsson03.library.BaseLibrary.getInstance(), () -> {
+                player.updateInventory();
+            });
+        }
         
         if (MenuHistoryManager.hasHistory(player)) {
             MenuHistoryManager.openPreviousMenu(player);

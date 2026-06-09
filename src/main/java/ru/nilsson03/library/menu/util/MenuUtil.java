@@ -1,22 +1,57 @@
 package ru.nilsson03.library.menu.util;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+
 import ru.nilsson03.library.NPlugin;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.invui.item.Item;
 import ru.nilsson03.library.menu.item.CustomItem;
 import ru.nilsson03.library.menu.item.impl.NavigationBackButton;
 import ru.nilsson03.library.menu.item.impl.StaticCustomItem;
 import ru.nilsson03.library.menu.item.impl.UpdatableCustomItem;
 import ru.nilsson03.library.text.util.ReplaceData;
-import xyz.xenondevs.invui.item.Item;
-
-import java.util.*;
 
 public class MenuUtil {
 
     public static List<CustomItem> parseSection(NPlugin plugin, ConfigurationSection section, ReplaceData... replacesData) {
         return parseSection(plugin, section, null, replacesData);
+    }
+
+    public static List<CustomItem> parseSection(NPlugin plugin, ConfigurationSection section, Supplier<ReplaceData[]> replacesDataSupplier) {
+        return parseSection(plugin, section, null, replacesDataSupplier);
+    }
+
+    public static List<CustomItem> parseSection(NPlugin plugin, ConfigurationSection section, FileConfiguration config, Supplier<ReplaceData[]> replacesDataSupplier) {
+        if (section == null) {
+            throw new IllegalArgumentException("Items section cannot be null");
+        }
+
+        List<CustomItem> items = new ArrayList<>();
+        Set<String> keys = section.getKeys(false);
+
+        for (String key : keys) {
+            ConfigurationSection itemConfig = section.getConfigurationSection(key);
+            if (itemConfig != null) {
+                boolean update = itemConfig.getBoolean("update", false);
+                CustomItem item = update 
+                    ? new UpdatableCustomItem(itemConfig, null, replacesDataSupplier)
+                    : new StaticCustomItem(itemConfig, replacesDataSupplier.get());
+                
+                items.add(item);
+            } else {
+                ConsoleLogger.warn(plugin, "Could not get item section for %s from configuration", key);
+            }
+        }
+
+        return items;
     }
 
     public static List<CustomItem> parseSection(NPlugin plugin, ConfigurationSection section, FileConfiguration config, ReplaceData... replacesData) {

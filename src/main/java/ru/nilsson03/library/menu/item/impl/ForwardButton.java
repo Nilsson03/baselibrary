@@ -7,11 +7,11 @@ import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
 import ru.nilsson03.library.bukkit.file.configuration.ParameterFile;
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
+import ru.nilsson03.library.invui.gui.PagedGui;
+import ru.nilsson03.library.invui.item.ItemProvider;
+import ru.nilsson03.library.invui.item.builder.ItemBuilder;
+import ru.nilsson03.library.invui.item.impl.controlitem.PageItem;
 import ru.nilsson03.library.text.api.UniversalTextApi;
-import xyz.xenondevs.invui.gui.PagedGui;
-import xyz.xenondevs.invui.item.ItemProvider;
-import xyz.xenondevs.invui.item.builder.ItemBuilder;
-import xyz.xenondevs.invui.item.impl.controlitem.PageItem;
 
 import java.util.List;
 

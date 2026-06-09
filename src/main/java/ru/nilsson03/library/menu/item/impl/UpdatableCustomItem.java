@@ -1,24 +1,29 @@
 package ru.nilsson03.library.menu.item.impl;
 
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
+import ru.nilsson03.library.invui.item.builder.ItemBuilder;
+import ru.nilsson03.library.invui.item.impl.AutoUpdateItem;
 import ru.nilsson03.library.menu.command.MenuAction;
 import ru.nilsson03.library.menu.command.factory.MenuActionFactory;
 import ru.nilsson03.library.menu.item.CustomItem;
 import ru.nilsson03.library.text.api.UniversalTextApi;
 import ru.nilsson03.library.text.util.ReplaceData;
-import xyz.xenondevs.invui.item.builder.ItemBuilder;
-import xyz.xenondevs.invui.item.impl.AutoUpdateItem;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
 
@@ -32,7 +37,12 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
     }
 
     public UpdatableCustomItem(ConfigurationSection section, Consumer<StaticCustomItem.ClickContext> clickHandler, ReplaceData... replacesData) {
+        this(section, clickHandler, () -> replacesData);
+    }
+
+    public UpdatableCustomItem(ConfigurationSection section, Consumer<StaticCustomItem.ClickContext> clickHandler, Supplier<ReplaceData[]> replacesDataSupplier) {
         super(20, () -> {
+            ReplaceData[] replacesData = replacesDataSupplier.get();
             ItemStack itemStack;
             if (section.getString("type", "material").equalsIgnoreCase("head")) {
                 itemStack =  ItemUtil.createHead(section.getString("head-id"))
@@ -80,15 +90,30 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
 
     @Override
     public void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {
+        event.setCancelled(true);
+        event.setResult(Event.Result.DENY);
+        
+        InventoryAction action = event.getAction();
+        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY || 
+            action == InventoryAction.COLLECT_TO_CURSOR ||
+            clickType.isShiftClick()) {
+            event.setCurrentItem(null);
+            event.setCursor(null);
+            Bukkit.getScheduler().runTask(ru.nilsson03.library.BaseLibrary.getInstance(), () -> {
+                player.updateInventory();
+            });
+        }
+        
         super.handleClick(clickType, player, event);
         if (clickHandler != null) {
             clickHandler.accept(new StaticCustomItem.ClickContext(clickType, player, event));
         }
         if (actions != null && !actions.isEmpty())  {
-            for (MenuAction action : actions) {
-                action.execute(player);
+            for (MenuAction menuAction : actions) {
+                menuAction.execute(player);
             }
         }
+        notifyWindows();
     }
 
     public char getPosition() {
