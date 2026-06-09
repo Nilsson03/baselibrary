@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ru.nilsson03</groupId>
   <artifactId>baselibrary</artifactId>
-  <version>1.2.6-7-DEV</version>
+  <version>1.2.8-RELEASE</version>
   <build>
     <resources>
       <resource>
@@ -42,6 +42,30 @@
             <configuration>
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
+              <relocations>
+                <relocation>
+                  <pattern>com.electronwill.nightconfig</pattern>
+                  <shadedPattern>ru.nilsson03.baselibrary.libs.nightconfig</shadedPattern>
+                </relocation>
+              </relocations>
+              <artifactSet>
+                <includes>
+                  <include>com.electronwill.night-config:*</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <exclude>META-INF/maven/**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <minimizeJar>false</minimizeJar>
             </configuration>
           </execution>
         </executions>
@@ -79,11 +103,18 @@
       <url>https://repo.dmulloy2.net/repository/public/</url>
     </repository>
     <repository>
-      <id>spigotmc-repo</id>
-      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+      <id>purpur</id>
+      <name>Purpur Maven Repo</name>
+      <url>https://repo.purpurmc.org/snapshots</url>
     </repository>
   </repositories>
   <dependencies>
+    <dependency>
+      <groupId>ru.nilsson03</groupId>
+      <artifactId>InvUI</artifactId>
+      <version>v1.49</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>com.sk89q.worldedit</groupId>
       <artifactId>worldedit-bukkit</artifactId>
@@ -103,8 +134,8 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.spigotmc</groupId>
-      <artifactId>spigot-api</artifactId>
+      <groupId>org.purpurmc.purpur</groupId>
+      <artifactId>purpur-api</artifactId>
       <version>1.16.5-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
