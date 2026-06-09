@@ -1,15 +1,19 @@
 package ru.nilsson03.library.bukkit.notify;
 
+import lombok.RequiredArgsConstructor;
+import ru.nilsson03.library.bukkit.notify.pending.PendingNotification;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 import java.time.Duration;
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+@RequiredArgsConstructor
 public class NotificationBuilder {
     private final PlayerNotificationService service;
     private final ScheduledExecutorService scheduler;
@@ -17,27 +21,30 @@ public class NotificationBuilder {
     private UUID playerId;
     private String notificationId;
     private Duration delay = Duration.ofSeconds(30);
+
     private Runnable onCreateAction;
     private Runnable onExpireAction;
     private Runnable onCancelAction;
 
-    public NotificationBuilder(PlayerNotificationService service, ScheduledExecutorService scheduler) {
-        this.service = service;
-        this.scheduler = scheduler;
-    }
+    private boolean pending = false;
+    private boolean once = false;
+    private String pendingCreateKey;
+    private String pendingExpireKey;
+    private String pendingCancelKey;
+    private final Map<String, String> metadata = new HashMap<>();
 
     public NotificationBuilder forPlayer(UUID playerId) {
-        this.playerId = Objects.requireNonNull(playerId, "Player ID cannot be null");
+        this.playerId = playerId;
         return this;
     }
 
     public NotificationBuilder withId(String notificationId) {
-        this.notificationId = Objects.requireNonNull(notificationId, "Notification ID cannot be null");
+        this.notificationId = notificationId;
         return this;
     }
 
     public NotificationBuilder expiresAfter(Duration delay) {
-        this.delay = Objects.requireNonNull(delay, "Delay cannot be null");
+        this.delay = delay;
         return this;
     }
 
@@ -56,23 +63,42 @@ public class NotificationBuilder {
         return this;
     }
 
+    public NotificationBuilder pending() {
+        this.pending = true;
+        return this;
+    }
+
+    public NotificationBuilder once() {
+        this.once = true;
+        return this;
+    }
+
+    public NotificationBuilder withPendingKeys(String createKey, String expireKey, String cancelKey) {
+        this.pendingCreateKey = createKey;
+        this.pendingExpireKey = expireKey;
+        this.pendingCancelKey = cancelKey;
+        return this;
+    }
+
+    public NotificationBuilder withPendingKey(String key) {
+        return withPendingKeys(key, key, key);
+    }
+
+    public NotificationBuilder withMetadata(String key, String value) {
+        this.metadata.put(key, value);
+        return this;
+    }
+
     public CompletableFuture<Boolean> schedule() {
-        validateParameters();
+        if (playerId == null) throw new IllegalStateException("Player ID must be set");
+        if (notificationId == null) throw new IllegalStateException("Notification ID must be set");
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                PlayerNotification notification = service.getPlayerNotifications()
-                        .computeIfAbsent(playerId, k -> new PlayerNotification(playerId));
-
-                if (notification.contains(notificationId)) {
-                    return false;
+                if (pending) {
+                    return schedulePending();
                 }
-
-                executeCreateAction();
-                ScheduledFuture<?> task = scheduleExpiration(notification);
-                notification.add(notificationId, task, onCancelAction);
-
-                return true;
+                return scheduleImmediate();
             } catch (Exception e) {
                 logError(e);
                 return false;
@@ -80,28 +106,62 @@ public class NotificationBuilder {
         });
     }
 
-    private void validateParameters() {
-        if (playerId == null) {
-            throw new IllegalStateException("Player ID must be set");
+    private boolean schedulePending() {
+        String createKey = pendingCreateKey;
+        String expireKey = pendingExpireKey;
+        String cancelKey = pendingCancelKey;
+
+        if (createKey == null && onCreateAction != null) {
+            createKey = "temp_pending_create_" + notificationId;
+            service.getPendingRegistry().onCreate(createKey, onCreateAction);
         }
-        if (notificationId == null) {
-            throw new IllegalStateException("Notification ID must be set");
+
+        if (expireKey == null && onExpireAction != null) {
+            expireKey = "temp_pending_expire_" + notificationId;
+            service.getPendingRegistry().onExpire(expireKey, onExpireAction);
         }
+
+        if (cancelKey == null && onCancelAction != null) {
+            cancelKey = "temp_pending_cancel_" + notificationId;
+            service.getPendingRegistry().onCancel(cancelKey, onCancelAction);
+        }
+
+        PendingNotification pendingNotification = PendingNotification.builder()
+                .playerId(playerId)
+                .notificationId(notificationId)
+                .delay(delay)
+                .onCreateKey(createKey)
+                .onExpireKey(expireKey)
+                .onCancelKey(cancelKey)
+                .metadata(metadata)
+                .once(once)
+                .build();
+
+        service.addPendingNotification(pendingNotification);
+        return true;
     }
 
-    private void executeCreateAction() {
+    private boolean scheduleImmediate() {
+        PlayerNotification notification = service.getPlayerNotifications()
+                .computeIfAbsent(playerId, k -> new PlayerNotification(playerId));
+
+        if (notification.contains(notificationId)) {
+            return false;
+        }
+
         if (onCreateAction != null) {
             onCreateAction.run();
         }
-    }
 
-    private ScheduledFuture<?> scheduleExpiration(PlayerNotification notification) {
-        return scheduler.schedule(() -> {
+        ScheduledFuture<?> task = scheduler.schedule(() -> {
             if (onExpireAction != null) {
                 onExpireAction.run();
             }
             service.cleanupNotification(playerId, notificationId);
         }, delay.toMillis(), TimeUnit.MILLISECONDS);
+
+        notification.add(notificationId, task, onCancelAction);
+        return true;
     }
 
     private void logError(Exception e) {

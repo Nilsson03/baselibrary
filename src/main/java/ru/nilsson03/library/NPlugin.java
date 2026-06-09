@@ -1,14 +1,15 @@
 package ru.nilsson03.library;
 
+import java.util.Optional;
+
 import org.bukkit.plugin.java.JavaPlugin;
+
 import ru.nilsson03.library.bukkit.file.BukkitDirectory;
 import ru.nilsson03.library.bukkit.file.FileRepository;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.notify.PlayerNotificationService;
 import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
-
-import java.util.Optional;
 
 public abstract class NPlugin extends JavaPlugin {
     private BaseLibrary baseLibrary;
@@ -32,7 +33,6 @@ public abstract class NPlugin extends JavaPlugin {
             ConsoleLogger.register(this, writeLogs);
             integration = new Integration(this);
             fileRepository = new FileRepository(this);
-            notificationService = new PlayerNotificationService();
             taskScheduler = new TaskScheduler(this);
             enable();
             ConsoleLogger.info(this, "%s plugin loaded successfully.", getDescription().getName());
