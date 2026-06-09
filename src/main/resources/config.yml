@@ -1,2 +1,31 @@
 debug: true
 writeLogs: true
+
+time:
+  seconds_first_form: "секунда"
+  seconds_second_form: "секунды"
+  seconds_third_form: "секунд"
+
+  minutes_first_form: "минута"
+  minutes_second_form: "минуты"
+  minutes_third_form: "минут"
+
+  hours_first_form: "час"
+  hours_second_form: "часа"
+  hours_third_form: "часов"
+
+  days_first_form: "день"
+  days_second_form: "дня"
+  days_third_form: "дней"
+
+  weeks_first_form: "неделя"
+  weeks_second_form: "недели"
+  weeks_third_form: "недель"
+
+  months_first_form: "месяц"
+  months_second_form: "месяца"
+  months_third_form: "месяцев"
+
+  years_first_form: "год"
+  years_second_form: "года"
+  years_third_form: "лет"

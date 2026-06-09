@@ -1,8 +1,15 @@
 package ru.nilsson03.library.bukkit.util;
 
+import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.block.Banner;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
@@ -90,6 +97,42 @@ public class TranslationUtil {
         return defaultLanguage;
     }
 
+    public static String translateItem(ItemStack itemStack) {
+        return translateItem(itemStack, defaultLanguage);
+    }
+
+    public static String translateItem(ItemStack itemStack, String language) {
+        Material type = itemStack.getType();
+        if (type == Material.POTION ||
+                type == Material.LINGERING_POTION ||
+                type == Material.SPLASH_POTION ||
+                type == Material.TIPPED_ARROW) {
+           PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
+           PotionEffectType effectType = potionMeta.getBasePotionData().getType().getEffectType();
+           return translatePotion(effectType, type, language);
+        } else if (type == Material.SHIELD) {
+            return translateShield(itemStack, language);
+        } else {
+            return translateMaterial(type, language);
+        }
+    }
+
+    private static String translateColor(Material material, DyeColor color, String language) {
+        return getTranslation(language, "items." + material + "." + color.name());
+    }
+
+    private static String translateShield(ItemStack itemStack, String language) {
+        ItemMeta meta = itemStack.getItemMeta();
+        Material type = itemStack.getType();
+        if (meta instanceof BlockStateMeta blockStateMeta) {
+            if (blockStateMeta.getBlockState() instanceof Banner banner) {
+                DyeColor baseColor = banner.getBaseColor();
+                return translateColor(type, baseColor, language);
+            }
+        }
+        return translateMaterial(Material.SHIELD, language);
+    }
+
     /**
      * Переводит название материала на указанный язык.
      *
@@ -99,16 +142,17 @@ public class TranslationUtil {
      */
     public static String translateMaterial(Material material, String language) {
         if (material == null) return "";
-        return getTranslation(language, "items." + material.name(), formatName(material.name()));
+        return getTranslation(language, "items." + material.name().toUpperCase(), formatName(material.name()));
     }
 
-    public static String translatePotion(PotionEffectType type, String language) {
-        return getTranslation(language, "items.POTION.EFFECT." + type.getName());
+    public static String translatePotion(PotionEffectType type, Material material, String language) {
+        return getTranslation(language, "items." + material + ".EFFECT." + type.getName());
     }
 
     public static String translatePotion(PotionEffectType type) {
         return getTranslation(getDefaultLanguage(), "items.POTION.EFFECT." + type.getName());
     }
+
 
     /**
      * Переводит название материала на язык по умолчанию.
@@ -129,7 +173,7 @@ public class TranslationUtil {
      */
     public static String translateMob(EntityType entityType, String language) {
         if (entityType == null) return "";
-        return getTranslation(language, "mobs." + entityType.name(), formatName(entityType.name()));
+        return getTranslation(language, "mobs." + entityType.name().toUpperCase(), formatName(entityType.name()));
     }
 
     /**

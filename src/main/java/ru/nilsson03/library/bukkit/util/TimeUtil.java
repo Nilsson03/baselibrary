@@ -1,5 +1,9 @@
 package ru.nilsson03.library.bukkit.util;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import ru.nilsson03.library.Config;
+
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -79,24 +83,22 @@ public final class TimeUtil {
         seconds -= minutes * SECONDS_IN_MINUTE;
 
         StringBuilder sb = new StringBuilder();
-        appendTimeUnit(sb, years, TimeUnit.YEARS);
-        appendTimeUnit(sb, months, TimeUnit.MONTHS);
-        appendTimeUnit(sb, weeks, TimeUnit.WEEKS);
-        appendTimeUnit(sb, days, TimeUnit.DAYS);
-        appendTimeUnit(sb, hours, TimeUnit.HOURS);
-        appendTimeUnit(sb, minutes, TimeUnit.MINUTES);
+        appendTimeUnit(sb, years, Config.TimeUnitForm.YEARS);
+        appendTimeUnit(sb, months, Config.TimeUnitForm.MONTHS);
+        appendTimeUnit(sb, weeks, Config.TimeUnitForm.WEEKS);
+        appendTimeUnit(sb, days, Config.TimeUnitForm.DAYS);
+        appendTimeUnit(sb, hours, Config.TimeUnitForm.HOURS);
+        appendTimeUnit(sb, minutes, Config.TimeUnitForm.MINUTES);
 
         if (seconds > 0) {
             if (sb.length() > 0) sb.append(", ");
-            sb.append(seconds).append(" ").append(getTimeUnitName(seconds, TimeUnit.SECONDS));
-        } else if (sb.length() > 0) {
-            sb.setLength(sb.length() - 2); // Удаляем последнюю ", "
+            sb.append(seconds).append(" ").append(getTimeUnitName(seconds, Config.TimeUnitForm.SECONDS));
         }
 
         return sb.toString();
     }
 
-    private static void appendTimeUnit(StringBuilder sb, long value, TimeUnit unit) {
+    private static void appendTimeUnit(StringBuilder sb, long value, Config.TimeUnitForm unit) {
         if (value > 0) {
             if (sb.length() > 0) sb.append(", ");
             sb.append(value).append(" ").append(getTimeUnitName(value, unit));
@@ -208,12 +210,14 @@ public final class TimeUtil {
         long seconds = ChronoUnit.SECONDS.between(start, end);
 
         StringBuilder sb = new StringBuilder();
-        appendTimeUnit(sb, years, TimeUnit.YEARS);
-        appendTimeUnit(sb, months, TimeUnit.MONTHS);
-        appendTimeUnit(sb, days, TimeUnit.DAYS);
-        appendTimeUnit(sb, hours, TimeUnit.HOURS);
-        appendTimeUnit(sb, minutes, TimeUnit.MINUTES);
-        sb.append(seconds).append(" ").append(getTimeUnitName(seconds, TimeUnit.SECONDS));
+        appendTimeUnit(sb, years, Config.TimeUnitForm.YEARS);
+        appendTimeUnit(sb, months, Config.TimeUnitForm.MONTHS);
+        appendTimeUnit(sb, days, Config.TimeUnitForm.DAYS);
+        appendTimeUnit(sb, hours, Config.TimeUnitForm.HOURS);
+        appendTimeUnit(sb, minutes, Config.TimeUnitForm.MINUTES);
+        if (seconds > 0) {
+            appendTimeUnit(sb, seconds, Config.TimeUnitForm.SECONDS);
+        }
 
         return sb.toString();
     }
@@ -221,28 +225,13 @@ public final class TimeUtil {
     /**
      * Возвращает правильную форму слова для единицы времени
      * @param value количество
-     * @param timeUnit единица времени
      * @return строковое представление единицы времени в правильной форме
      */
-    private static String getTimeUnitName(long value, TimeUnit unit) {
-        switch (unit) {
-            case SECONDS:
-                return getCorrectForm(value, "секунда", "секунды", "секунд");
-            case MINUTES:
-                return getCorrectForm(value, "минута", "минуты", "минут");
-            case HOURS:
-                return getCorrectForm(value, "час", "часа", "часов");
-            case DAYS:
-                return getCorrectForm(value, "день", "дня", "дней");
-            case WEEKS:
-                return getCorrectForm(value, "неделя", "недели", "недель");
-            case MONTHS:
-                return getCorrectForm(value, "месяц", "месяца", "месяцев");
-            case YEARS:
-                return getCorrectForm(value, "год", "года", "лет");
-            default:
-                return "";
-        }
+    private static String getTimeUnitName(long value, Config.TimeUnitForm unit) {
+        String form1 = Config.getTimeString(unit, Config.WordForm.FIRST);
+        String form2 = Config.getTimeString(unit, Config.WordForm.SECOND);
+        String form3 = Config.getTimeString(unit, Config.WordForm.THIRD);
+        return getCorrectForm(value, form1, form2, form3);
     }
     
     private static String getCorrectForm(long number, String form1, String form2, String form5) {
@@ -293,40 +282,5 @@ public final class TimeUtil {
      */
     public static Date getCurrentDate() {
         return new Date();
-    }
-
-    /**
-     * Единицы времени с правильными формами слов для русского языка
-     */
-    protected enum TimeUnit {
-        SECONDS("секунда", "секунды", "секунд"),
-        MINUTES("минута", "минуты", "минут"),
-        HOURS("час", "часа", "часов"),
-        DAYS("день", "дня", "дней"),
-        WEEKS("неделя", "недели", "недель"),
-        MONTHS("месяц", "месяца", "месяцев"),
-        YEARS("год", "года", "лет");
-
-        private final String one;
-        private final String two;
-        private final String three;
-
-        TimeUnit(String one, String two, String three) {
-            this.one = one;
-            this.two = two;
-            this.three = three;
-        }
-
-        public String getOne() {
-            return this.one;
-        }
-
-        public String getTwo() {
-            return this.two;
-        }
-
-        public String getThree() {
-            return this.three;
-        }
     }
 }

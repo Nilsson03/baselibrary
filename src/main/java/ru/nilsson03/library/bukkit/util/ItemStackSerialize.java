@@ -18,6 +18,8 @@ public class ItemStackSerialize {
 
     private static final String DELIMITER = ":";
     private static final String EFFECT_DELIMITER = ";";
+    private static final String LORE_DELIMITER = "|";
+    private static final String META_DELIMITER = "~";
 
     private static final ServerVersion currentVersion = ServerVersionUtils.CURRENT_VERSION;
 
@@ -43,6 +45,22 @@ public class ItemStackSerialize {
 
             if (meta instanceof PotionMeta) {
                 serializePotionEffects((PotionMeta) meta, sb);
+            }
+
+            if (meta.hasDisplayName()) {
+                sb.append(META_DELIMITER)
+                  .append("name")
+                  .append(DELIMITER)
+                  .append(meta.getDisplayName().replace(META_DELIMITER, "").replace(LORE_DELIMITER, ""));
+            }
+
+            if (meta.hasLore() && meta.getLore() != null) {
+                sb.append(META_DELIMITER)
+                  .append("lore")
+                  .append(DELIMITER)
+                  .append(meta.getLore().stream()
+                          .map(line -> line.replace(META_DELIMITER, "").replace(LORE_DELIMITER, ""))
+                          .collect(Collectors.joining(LORE_DELIMITER)));
             }
         }
 
@@ -120,6 +138,24 @@ public class ItemStackSerialize {
 
                 if (meta instanceof PotionMeta && parts.length > index) {
                     deserializePotionEffects((PotionMeta) meta, Arrays.copyOfRange(parts, index, parts.length));
+                }
+
+                String remainingData = String.join(DELIMITER, Arrays.copyOfRange(parts, index, parts.length));
+                if (remainingData.contains(META_DELIMITER)) {
+                    String[] metaParts = remainingData.split(META_DELIMITER);
+                    for (String metaPart : metaParts) {
+                        if (metaPart.isEmpty()) continue;
+                        
+                        if (metaPart.startsWith("name" + DELIMITER)) {
+                            String displayName = metaPart.substring(("name" + DELIMITER).length());
+                            meta.setDisplayName(displayName);
+                        } else if (metaPart.startsWith("lore" + DELIMITER)) {
+                            String loreData = metaPart.substring(("lore" + DELIMITER).length());
+                            if (!loreData.isEmpty()) {
+                                meta.setLore(Arrays.asList(loreData.split("\\" + LORE_DELIMITER)));
+                            }
+                        }
+                    }
                 }
 
                 item.setItemMeta(meta);

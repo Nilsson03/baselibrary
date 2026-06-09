@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.MemorySection;
@@ -37,13 +38,12 @@ public class ItemStackParser {
         int amount = parseAmount(parameters);
         ItemStack item = new ItemStack(material, amount);
 
-        applyItemMeta(item, parameters);
-
         if (isPotion(material)) {
             applyPotionData(item, parameters);
         } else if (isTippedArrow(material)) {
             applyTippedArrowData(item, parameters);
         }
+        applyItemMeta(item, parameters);
 
         return item;
     }
@@ -164,6 +164,8 @@ public class ItemStackParser {
             applyLegacyPotionData(potionMeta, potionDataMap);
         }
 
+        applyPotionColor(potionMeta, potionDataMap);
+
         item.setItemMeta(potionMeta);
     }
 
@@ -209,6 +211,8 @@ public class ItemStackParser {
             applyLegacyPotionData(potionMeta, potionDataMap);
         }
 
+        applyPotionColor(potionMeta, potionDataMap);
+
         item.setItemMeta(potionMeta);
     }
 
@@ -232,6 +236,70 @@ public class ItemStackParser {
                     effectType, durationTicks, amplifier, true, true, true);
 
             potionMeta.addCustomEffect(effect, true);
+        }
+    }
+
+    private static void applyPotionColor(PotionMeta potionMeta, Map<String, Object> data) {
+        if (!data.containsKey("color"))
+            return;
+
+        String colorStr = data.get("color").toString();
+        Color color = parseColor(colorStr);
+        if (color != null) {
+            potionMeta.setColor(color);
+        }
+    }
+
+    private static Color parseColor(String colorStr) {
+        if (colorStr.startsWith("#")) {
+            return parseHexColor(colorStr);
+        }
+
+        String[] rgb = colorStr.split(",");
+        if (rgb.length == 3) {
+            try {
+                int r = Integer.parseInt(rgb[0].trim());
+                int g = Integer.parseInt(rgb[1].trim());
+                int b = Integer.parseInt(rgb[2].trim());
+                return Color.fromRGB(r, g, b);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        try {
+            return switch (colorStr.toUpperCase()) {
+                case "RED" -> Color.RED;
+                case "GREEN" -> Color.GREEN;
+                case "BLUE" -> Color.BLUE;
+                case "YELLOW" -> Color.YELLOW;
+                case "PURPLE" -> Color.PURPLE;
+                case "ORANGE" -> Color.ORANGE;
+                case "LIME" -> Color.LIME;
+                case "AQUA" -> Color.AQUA;
+                case "WHITE" -> Color.WHITE;
+                case "BLACK" -> Color.BLACK;
+                case "GRAY", "GREY" -> Color.GRAY;
+                case "MAROON" -> Color.MAROON;
+                case "NAVY" -> Color.NAVY;
+                case "OLIVE" -> Color.OLIVE;
+                case "SILVER" -> Color.SILVER;
+                case "TEAL" -> Color.TEAL;
+                case "FUCHSIA" -> Color.FUCHSIA;
+                default -> null;
+            };
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static Color parseHexColor(String hex) {
+        try {
+            int r = Integer.parseInt(hex.substring(1, 3), 16);
+            int g = Integer.parseInt(hex.substring(3, 5), 16);
+            int b = Integer.parseInt(hex.substring(5, 7), 16);
+            return Color.fromRGB(r, g, b);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            return null;
         }
     }
 
