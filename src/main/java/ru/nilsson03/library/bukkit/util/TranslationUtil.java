@@ -1,9 +1,18 @@
 package ru.nilsson03.library.bukkit.util;
 
-import org.bukkit.ChatColor;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Banner;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -11,17 +20,10 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffectType;
+
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 import ru.nilsson03.library.text.api.UniversalTextApi;
-
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 /**
  * @author Nicholas Alexandrov
@@ -54,8 +56,10 @@ public class TranslationUtil {
         String resourcePath = "translation/" + fileName;
 
         try {
-            InputStream stream = TranslationUtil.class.getClassLoader().getResourceAsStream(resourcePath);
-            
+            InputStream stream = libraryPlugin != null
+                    ? libraryPlugin.getResource(resourcePath)
+                    : TranslationUtil.class.getClassLoader().getResourceAsStream(resourcePath);
+
             if (stream == null) {
                 if (libraryPlugin != null) {
                     ConsoleLogger.warn(libraryPlugin, "Translation file not found in resources: %s", resourcePath);
@@ -66,11 +70,11 @@ public class TranslationUtil {
             InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
             YamlConfiguration config = YamlConfiguration.loadConfiguration(reader);
             translationConfigs.put(language.toLowerCase(), config);
-            
+
             if (libraryPlugin != null) {
                 ConsoleLogger.info(libraryPlugin, "Loaded translation file from resources: %s", fileName);
             }
-            
+
             stream.close();
         } catch (Exception e) {
             if (libraryPlugin != null) {
@@ -107,9 +111,9 @@ public class TranslationUtil {
                 type == Material.LINGERING_POTION ||
                 type == Material.SPLASH_POTION ||
                 type == Material.TIPPED_ARROW) {
-           PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
-           PotionEffectType effectType = potionMeta.getBasePotionData().getType().getEffectType();
-           return translatePotion(effectType, type, language);
+            PotionMeta potionMeta = (PotionMeta) itemStack.getItemMeta();
+            PotionEffectType effectType = potionMeta.getBasePotionData().getType().getEffectType();
+            return translatePotion(effectType, type, language);
         } else if (type == Material.SHIELD) {
             return translateShield(itemStack, language);
         } else {
@@ -118,7 +122,8 @@ public class TranslationUtil {
     }
 
     private static String translateColor(Material material, DyeColor color, String language) {
-        return getTranslation(language, "items." + material + "." + color.name());
+        return getTranslation(language, "items." + material + "." + color.name(),
+                formatName(material.name() + " " + color.name()));
     }
 
     private static String translateShield(ItemStack itemStack, String language) {
@@ -141,18 +146,19 @@ public class TranslationUtil {
      * @return переведенное название или оригинальное имя материала
      */
     public static String translateMaterial(Material material, String language) {
-        if (material == null) return "";
+        if (material == null)
+            return "";
         return getTranslation(language, "items." + material.name().toUpperCase(), formatName(material.name()));
     }
 
     public static String translatePotion(PotionEffectType type, Material material, String language) {
-        return getTranslation(language, "items." + material + ".EFFECT." + type.getName());
+        return getTranslation(language, "effects." + type.getName(), formatName(type.getName()));
     }
 
     public static String translatePotion(PotionEffectType type) {
-        return getTranslation(getDefaultLanguage(), "items.POTION.EFFECT." + type.getName());
+        return getTranslation(getDefaultLanguage(), "effects." + type.getName(),
+                formatName(type.getName()));
     }
-
 
     /**
      * Переводит название материала на язык по умолчанию.
@@ -172,7 +178,8 @@ public class TranslationUtil {
      * @return переведенное название или оригинальное имя моба
      */
     public static String translateMob(EntityType entityType, String language) {
-        if (entityType == null) return "";
+        if (entityType == null)
+            return "";
         return getTranslation(language, "mobs." + entityType.name().toUpperCase(), formatName(entityType.name()));
     }
 
@@ -194,7 +201,8 @@ public class TranslationUtil {
      * @return переведенное название или оригинальное имя эффекта
      */
     public static String translateEffect(PotionEffectType effectType, String language) {
-        if (effectType == null) return "";
+        if (effectType == null)
+            return "";
         String effectName = effectType.getName().toUpperCase();
         return getTranslation(language, "effects." + effectName, formatName(effectName));
     }
@@ -217,7 +225,8 @@ public class TranslationUtil {
      * @return переведенное название или оригинальное имя зачарования
      */
     public static String translateEnchantment(Enchantment enchantment, String language) {
-        if (enchantment == null) return "";
+        if (enchantment == null)
+            return "";
         String enchantName = enchantment.getKey().getKey().toUpperCase();
         return getTranslation(language, "items." + enchantName, formatName(enchantName));
     }
@@ -240,8 +249,9 @@ public class TranslationUtil {
      * @return переведенное название спавнера
      */
     public static String translateSpawner(EntityType entityType, String language) {
-        if (entityType == null) return "";
-        return getTranslation(language, "spawners-name." + entityType.name(), 
+        if (entityType == null)
+            return "";
+        return getTranslation(language, "spawners-name." + entityType.name(),
                 "Spawner " + formatName(entityType.name()));
     }
 
@@ -265,13 +275,13 @@ public class TranslationUtil {
      */
     public static String getTranslation(String language, String path, String defaultValue) {
         YamlConfiguration config = translationConfigs.get(language.toLowerCase());
-        
+
         if (config == null) {
             return UniversalTextApi.colorize(defaultValue);
         }
 
         String translation = config.getString(path);
-        
+
         if (translation == null || translation.isEmpty()) {
             return UniversalTextApi.colorize(defaultValue);
         }
@@ -327,25 +337,27 @@ public class TranslationUtil {
     }
 
     /**
-     * Форматирует имя, заменяя подчеркивания на пробелы и делая первую букву заглавной.
+     * Форматирует имя, заменяя подчеркивания на пробелы и делая первую букву
+     * заглавной.
      *
      * @param name исходное имя
      * @return отформатированное имя
      */
     private static String formatName(String name) {
-        if (name == null || name.isEmpty()) return "";
-        
+        if (name == null || name.isEmpty())
+            return "";
+
         String[] words = name.toLowerCase().split("_");
         StringBuilder result = new StringBuilder();
-        
+
         for (String word : words) {
             if (!word.isEmpty()) {
                 result.append(Character.toUpperCase(word.charAt(0)))
-                      .append(word.substring(1))
-                      .append(" ");
+                        .append(word.substring(1))
+                        .append(" ");
             }
         }
-        
+
         return result.toString().trim();
     }
 
