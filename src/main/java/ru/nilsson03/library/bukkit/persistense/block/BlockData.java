@@ -1,16 +1,19 @@
 package ru.nilsson03.library.bukkit.persistense.block;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 @Getter
 @Accessors(fluent = true)
@@ -21,7 +24,7 @@ public class BlockData {
     @NotNull
     private final Map<String, Object> data;
 
-    public BlockData(@NotNull  Block block) {
+    public BlockData(@NotNull Block block) {
         Objects.requireNonNull(block, "Block cant be null!");
         Location location = block.getLocation();
         this.blockKey = location.getWorld().getName() + ":" +
@@ -102,15 +105,31 @@ public class BlockData {
                 location.getBlockZ();
     }
 
+    private Location fromStringToLocation() {
+        String[] split = blockKey.split(":");
+        World world = Bukkit.getWorld(split[0]);
+        double blockX = Double.parseDouble(split[1]);
+        double blockY = Double.parseDouble(split[2]);
+        double blockZ = Double.parseDouble(split[3]);
+        return new Location(world, blockX, blockY, blockZ);
+    }
+
     @Override
     public boolean equals(@NotNull Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof BlockData other)) return false;
+        if (this == obj)
+            return true;
+        if (!(obj instanceof BlockData other))
+            return false;
         return blockKey.equals(other.blockKey);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(blockKey);
+    }
+
+    public Block toBlock() {
+        Location parsedLocation = fromStringToLocation();
+        return parsedLocation.getBlock();
     }
 }
