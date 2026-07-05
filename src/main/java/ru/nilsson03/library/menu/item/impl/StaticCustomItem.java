@@ -1,5 +1,8 @@
 package ru.nilsson03.library.menu.item.impl;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -10,6 +13,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
 import ru.nilsson03.library.invui.item.ItemProvider;
@@ -20,9 +24,6 @@ import ru.nilsson03.library.menu.command.factory.MenuActionFactory;
 import ru.nilsson03.library.menu.item.CustomItem;
 import ru.nilsson03.library.text.api.UniversalTextApi;
 import ru.nilsson03.library.text.util.ReplaceData;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 public class StaticCustomItem extends AbstractItem implements CustomItem {
 
@@ -36,12 +37,14 @@ public class StaticCustomItem extends AbstractItem implements CustomItem {
         this(section, null, replacesData);
     }
 
-    public StaticCustomItem(ConfigurationSection section, Consumer<ClickContext> clickHandler, ReplaceData... replacesData) {
+    public StaticCustomItem(ConfigurationSection section, Consumer<ClickContext> clickHandler,
+            ReplaceData... replacesData) {
         this.section = section;
         this.clickHandler = clickHandler;
         ItemStack itemStack = buildItem(replacesData);
         this.itemProvider = new ItemBuilder(itemStack);
-        c = section.getString("position").charAt(0);
+        String positionStr = section.contains("char") ? section.getString("char") : section.getString("position");
+        c = positionStr != null ? positionStr.charAt(0) : ' ';
         this.actions = MenuActionFactory.createFromSection(section);
     }
 
@@ -64,19 +67,19 @@ public class StaticCustomItem extends AbstractItem implements CustomItem {
     public void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {
         event.setCancelled(true);
         event.setResult(Event.Result.DENY);
-        
+
         InventoryAction action = event.getAction();
-        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY || 
-            action == InventoryAction.COLLECT_TO_CURSOR ||
-            clickType.isShiftClick()) {
+        if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY ||
+                action == InventoryAction.COLLECT_TO_CURSOR ||
+                clickType.isShiftClick()) {
             event.setCurrentItem(null);
             event.setCursor(null);
             Bukkit.getScheduler().runTask(ru.nilsson03.library.BaseLibrary.getInstance(), () -> {
                 player.updateInventory();
             });
         }
-        
-        if (actions != null && !actions.isEmpty())  {
+
+        if (actions != null && !actions.isEmpty()) {
             for (MenuAction menuAction : actions) {
                 menuAction.execute(player);
             }
@@ -98,7 +101,8 @@ public class StaticCustomItem extends AbstractItem implements CustomItem {
         SpigotItemBuilder builder = new SpigotItemBuilder(item)
                 .setMeta(meta);
 
-        builder.setDisplayName(UniversalTextApi.replacePlaceholders(section.getString("name"), replacesData));
+        String rawName = section.contains("display_name") ? section.getString("display_name") : section.getString("name");
+        builder.setDisplayName(UniversalTextApi.replacePlaceholders(rawName != null ? rawName : "", replacesData));
 
         if (section.contains("lore")) {
             List<String> lore = section.getStringList("lore");

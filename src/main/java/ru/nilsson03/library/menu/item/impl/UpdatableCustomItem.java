@@ -56,7 +56,8 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
             SpigotItemBuilder builder = new SpigotItemBuilder(itemStack)
                     .setMeta(meta);
 
-            String displayName = section.getString("name");
+            String displayName = section.contains("display_name") ? section.getString("display_name") : section.getString("name");
+            if (displayName == null) displayName = "";
             if (replacesData.length != 0) {
                 displayName = UniversalTextApi.replacePlaceholders(displayName, replacesData);
             }
@@ -74,7 +75,8 @@ public class UpdatableCustomItem extends AutoUpdateItem implements CustomItem {
         });
         this.clickHandler = clickHandler;
         this.section = section;
-        c = section.getString("position").charAt(0);
+        String positionStr = section.contains("char") ? section.getString("char") : section.getString("position");
+        c = positionStr != null ? positionStr.charAt(0) : ' ';
         this.actions = MenuActionFactory.createFromSection(section);
     }
 
