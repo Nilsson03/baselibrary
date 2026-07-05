@@ -1,15 +1,21 @@
 package ru.nilsson03.library.alt.top;
 
-import ru.nilsson03.library.NPlugin;
-import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
-import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
-
 import java.time.Duration;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
+
+import ru.nilsson03.library.NPlugin;
+import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 public class TopManager<K, V> {
 
@@ -97,7 +103,6 @@ public class TopManager<K, V> {
     public List<Map.Entry<Integer, V>> getTopPlayersWithPositions(int limit) {
         List<Map.Entry<Integer, V>> topPlayers = new ArrayList<>();
 
-        // Если limit = -1, показываем всех игроков
         int count = (limit == -1) ? topStorage.size() : Math.min(limit, topStorage.size());
 
         for (int i = 0; i < count; i++) {
@@ -111,13 +116,12 @@ public class TopManager<K, V> {
     }
 
     public List<String> getTopPlayersFormatted(String format, int limit) {
+        return getTopPlayersFormatted(format, null, limit);
+    }
+
+    public List<String> getTopPlayersFormatted(String format, String emptyFormat, int limit) {
         List<String> top = new ArrayList<>();
         List<Map.Entry<Integer, V>> topPlayers = getTopPlayersWithPositions(limit);
-
-        // Если нет игроков в топе, возвращаем пустой список
-        if (topPlayers.isEmpty()) {
-            return top;
-        }
 
         for (int i = 0; i < limit; i++) {
             if (i < topPlayers.size()) {
@@ -131,7 +135,11 @@ public class TopManager<K, V> {
                         .replace("{player}", name)
                         .replace("{value}", String.valueOf(value)));
             } else {
-                top.add("Пусто");
+                String formatToUse = (emptyFormat != null) ? emptyFormat : format;
+                top.add(formatToUse
+                        .replace("{number}", String.valueOf(i + 1))
+                        .replace("{player}", "Никто")
+                        .replace("{value}", "0"));
             }
         }
         return top;
