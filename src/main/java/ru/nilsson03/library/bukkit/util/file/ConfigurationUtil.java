@@ -1,15 +1,19 @@
 package ru.nilsson03.library.bukkit.util.file;
 
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import ru.nilsson03.library.NPlugin;
-import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.*;
+import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import ru.nilsson03.library.NPlugin;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 public class ConfigurationUtil {
 
@@ -24,7 +28,7 @@ public class ConfigurationUtil {
             throw new IllegalStateException("Failed to create directory: " + configFile.getParent());
         }
 
-        if (!configFile.exists() || configFile.length() == 0) {
+        if (!configFile.exists()) {
             try (InputStream input = plugin.getResource(fileName)) {
                 if (input != null) {
                     Files.copy(input, configFile.toPath());
@@ -36,6 +40,13 @@ public class ConfigurationUtil {
                 }
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to initialize config: " + fileName, e);
+            }
+        } else if (configFile.length() == 0 && plugin.getResource(fileName) != null) {
+            try (InputStream input = plugin.getResource(fileName)) {
+                Files.copy(input, configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                ConsoleLogger.info(plugin, "Overwrote empty config with default: %s", configFile.getPath());
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to overwrite empty config: " + fileName, e);
             }
         }
 
