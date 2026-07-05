@@ -21,11 +21,11 @@ public class BaseLibrary extends JavaPlugin {
     public void onEnable() {
         instance = this;
         this.saveDefaultConfig();
-
         ServerVersion currentVersion = ServerVersionUtils.getServerVersion();
 
         if (currentVersion.isOlderThan(ServerVersion.v1_16)) {
-            ConsoleLogger.error(this, "The library does not support versions lower than 1.16. Please install version 1.16 or higher and try again.");
+            ConsoleLogger.error(this,
+                    "The library does not support versions lower than 1.16. Please install version 1.16 or higher and try again.");
             onDisable();
             return;
         }
@@ -35,16 +35,19 @@ public class BaseLibrary extends JavaPlugin {
 
         integration = new Integration(this);
         ClickActionRegistry.register(this);
-        
+
         Bukkit.getPluginManager().registerEvents(new MenuProtectionListener(), this);
 
         TranslationUtil.initialize(this);
         TranslationUtil.loadTranslations("ru");
         TranslationUtil.setDefaultLanguage("ru");
 
-        ConsoleLogger.info(this, "BaseLibrary version %s has been successfully enabled.", getDescription().getVersion());
+        ConsoleLogger.info(this, "BaseLibrary version %s has been successfully enabled.",
+                getDescription().getVersion());
         ConsoleLogger.info(this, "The server version used is %s on %s", currentVersion.name(), Bukkit.getName());
-        ConsoleLogger.info(this, "Thank you for using my plugins, you can find all the detailed information on my discord server - %s", "https://dsc.gg/velialcult");
+        ConsoleLogger.info(this,
+                "Thank you for using my plugins, you can find all the detailed information on my discord server - %s",
+                "https://dsc.gg/velialcult");
 
     }
 
