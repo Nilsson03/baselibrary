@@ -1,18 +1,26 @@
 package ru.nilsson03.library.bukkit.util;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
-import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.text.api.UniversalTextApi;
 
 public class ItemStackSerialize {
 
@@ -33,88 +41,153 @@ public class ItemStackSerialize {
 
             if (meta instanceof Damageable) {
                 sb.append(((Damageable) meta).getDamage())
-                  .append(DELIMITER);
+                        .append(DELIMITER);
             }
 
             if (currentVersion.isNewerThan(ServerVersion.v1_14)) {
                 if (meta.hasCustomModelData()) {
                     sb.append(meta.getCustomModelData())
-                      .append(DELIMITER);
+                            .append(DELIMITER);
                 }
             }
 
             if (meta instanceof PotionMeta) {
+                sb.append(META_DELIMITER).append("potion_effects").append(DELIMITER);
                 serializePotionEffects((PotionMeta) meta, sb);
             }
 
             if (meta.hasDisplayName()) {
                 sb.append(META_DELIMITER)
-                  .append("name")
-                  .append(DELIMITER)
-                  .append(meta.getDisplayName().replace(META_DELIMITER, "").replace(LORE_DELIMITER, ""));
+                        .append("name")
+                        .append(DELIMITER)
+                        .append(meta.getDisplayName()
+                                .replace(META_DELIMITER, "")
+                                .replace("§", "&")
+                                .replace(LORE_DELIMITER, ""));
             }
 
             if (meta.hasLore() && meta.getLore() != null) {
                 sb.append(META_DELIMITER)
-                  .append("lore")
-                  .append(DELIMITER)
-                  .append(meta.getLore().stream()
-                          .map(line -> line.replace(META_DELIMITER, "").replace(LORE_DELIMITER, ""))
-                          .collect(Collectors.joining(LORE_DELIMITER)));
+                        .append("lore")
+                        .append(DELIMITER)
+                        .append(meta.getLore().stream()
+                                .map(line -> line.replace(META_DELIMITER, "")
+                                        .replace("§", "&")
+                                        .replace(LORE_DELIMITER, ""))
+                                .collect(Collectors.joining(LORE_DELIMITER)));
             }
-        }
 
-        if (!item.getEnchantments().isEmpty()) {
-            sb.append(item.getEnchantments().entrySet().stream()
-                          .map(e -> e.getKey().getKey() + DELIMITER + e.getValue())
-                          .collect(Collectors.joining(DELIMITER)));
+            if (!item.getEnchantments().isEmpty()) {
+                sb.append(META_DELIMITER).append("ench").append(DELIMITER);
+                sb.append(item.getEnchantments().entrySet().stream()
+                        .map(e -> e.getKey().getKey() + ":" + e.getValue())
+                        .collect(Collectors.joining(DELIMITER)));
+            }
+
+            if (!meta.getItemFlags().isEmpty()) {
+                sb.append(META_DELIMITER).append("flags").append(DELIMITER);
+                sb.append(meta.getItemFlags().stream()
+                        .map(Enum::name)
+                        .collect(Collectors.joining(",")));
+            }
+
+            if (meta instanceof LeatherArmorMeta) {
+                LeatherArmorMeta leather = (LeatherArmorMeta) meta;
+                sb.append(META_DELIMITER).append("color").append(DELIMITER);
+                sb.append(leather.getColor().asRGB());
+            }
         }
 
         return sb.toString();
     }
 
+    public static void deserializePotionEffects(PotionMeta meta, String effectsData) {
+        if (effectsData == null || effectsData.isEmpty()) {
+            return;
+        }
+
+        try {
+            String[] effects = effectsData.split(EFFECT_DELIMITER);
+            for (String effectPart : effects) {
+                if (effectPart.isEmpty())
+                    continue;
+
+                String[] effectParts = effectPart.split(DELIMITER);
+                if (effectParts.length < 3) {
+                    ConsoleLogger.warn("baselibrary",
+                            "Invalid potion effect data: %s (expected at least 3 parts)", effectPart);
+                    continue;
+                }
+
+                try {
+                    PotionEffectType type = PotionEffectType.getByName(effectParts[0]);
+                    if (type == null) {
+                        ConsoleLogger.warn("baselibrary", "Unknown potion effect type: %s", effectParts[0]);
+                        continue;
+                    }
+
+                    int duration = Integer.parseInt(effectParts[1]);
+                    int amplifier = Integer.parseInt(effectParts[2]);
+
+                    meta.addCustomEffect(new PotionEffect(type, duration, amplifier), true);
+                } catch (NumberFormatException e) {
+                    ConsoleLogger.error("baselibrary",
+                            "Failed to parse potion effect numbers: %s", e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            ConsoleLogger.error("baselibrary",
+                    "An error occurred when deserializing potion effects: %s", e.getMessage());
+        }
+    }
+
     public static void serializePotionEffects(PotionMeta meta, StringBuilder sb) {
         try {
             PotionType baseType = meta.getBasePotionData()
-                                      .getType();
+                    .getType();
             if (baseType != PotionType.AWKWARD && baseType != PotionType.WATER) {
                 PotionEffectType effectType = baseType.getEffectType();
                 int duration = meta.getBasePotionData()
-                                   .isExtended()
-                               ? 9600
-                               : 3600;
+                        .isExtended()
+                                ? 9600
+                                : 3600;
                 int amplifier = meta.getBasePotionData()
-                                    .isUpgraded()
+                        .isUpgraded()
                                 ? 1
                                 : 0;
                 sb.append(effectType.getName())
-                  .append(DELIMITER)
-                  .append(duration / 20)
-                  .append(DELIMITER)
-                  .append(amplifier)
-                  .append(EFFECT_DELIMITER);
+                        .append(DELIMITER)
+                        .append(duration / 20)
+                        .append(DELIMITER)
+                        .append(amplifier)
+                        .append(EFFECT_DELIMITER);
             }
 
             if (meta.hasCustomEffects()) {
                 meta.getCustomEffects()
-                    .forEach(effect -> sb.append(effect.getType()
-                                                       .getName())
-                                         .append(DELIMITER)
-                                         .append(effect.getDuration())
-                                         .append(DELIMITER)
-                                         .append(effect.getAmplifier())
-                                         .append(EFFECT_DELIMITER));
+                        .forEach(effect -> sb.append(effect.getType()
+                                .getName())
+                                .append(DELIMITER)
+                                .append(effect.getDuration())
+                                .append(DELIMITER)
+                                .append(effect.getAmplifier())
+                                .append(EFFECT_DELIMITER));
             }
         } catch (Exception e) {
-            ConsoleLogger.error("baselibrary", "An error occurred when applying the result of parsing the %s string to PotionMeta, the reason is %s.", sb.toString(), e.getMessage());
+            ConsoleLogger.error("baselibrary",
+                    "An error occurred when applying the result of parsing the %s string to PotionMeta, the reason is %s.",
+                    sb.toString(), e.getMessage());
         }
     }
 
-
     public static Optional<ItemStack> deserialize(String data) {
-        String[] parts = data.split(DELIMITER);
+        if (data == null || data.isEmpty()) {
+            ConsoleLogger.warn("baselibrary", "Cannot deserialize item: data is null or empty");
+            return Optional.empty();
+        }
+
+        String[] parts = data.split(DELIMITER, -1);
         if (parts.length < 2) {
-            ConsoleLogger.warn("baselibrary", "Invalid %s string for parsing in the ItemStack item (data.split(%s) <2).", data, DELIMITER);
             return Optional.empty();
         }
 
@@ -127,33 +200,94 @@ public class ItemStackSerialize {
                 ItemMeta meta = item.getItemMeta();
                 int index = 2;
 
-                if (meta instanceof Damageable) {
-                    ((Damageable) meta).setDamage(Integer.parseInt(parts[index++]));
+                // Пытаемся распарсить damage (если это число)
+                if (meta instanceof Damageable && parts.length > index && !parts[index].isEmpty()) {
+                    try {
+                        int damage = Integer.parseInt(parts[index]);
+                        ((Damageable) meta).setDamage(damage);
+                        index++;
+                    } catch (NumberFormatException e) {
+                        // Не число - пропускаем damage
+                    }
+                } else if (!(meta instanceof Damageable) && parts.length > index && !parts[index].isEmpty()) {
+                    // Для не-Damageable предметов пропускаем damage только если это число
+                    try {
+                        Integer.parseInt(parts[index]);
+                        index++;
+                    } catch (NumberFormatException e) {
+                        // Не число - не пропускаем
+                    }
                 }
 
-                if (currentVersion.isNewerThan(ServerVersion.v1_14)
-                        && parts.length > index && !parts[index].isEmpty()) {
-                    meta.setCustomModelData(Integer.parseInt(parts[index++]));
+                // Пытаемся распарсить customModelData (если это число)
+                if (currentVersion.isNewerThan(ServerVersion.v1_14) && parts.length > index
+                        && !parts[index].isEmpty()) {
+                    try {
+                        int cmd = Integer.parseInt(parts[index]);
+                        if (cmd > 0) {
+                            meta.setCustomModelData(cmd);
+                        }
+                        index++;
+                    } catch (NumberFormatException e) {
+                        // Не число - пропускаем customModelData
+                    }
                 }
 
-                if (meta instanceof PotionMeta && parts.length > index) {
-                    deserializePotionEffects((PotionMeta) meta, Arrays.copyOfRange(parts, index, parts.length));
-                }
+                if (parts.length > index) {
+                    String remaining = String.join(DELIMITER,
+                            Arrays.copyOfRange(parts, index, parts.length));
 
-                String remainingData = String.join(DELIMITER, Arrays.copyOfRange(parts, index, parts.length));
-                if (remainingData.contains(META_DELIMITER)) {
-                    String[] metaParts = remainingData.split(META_DELIMITER);
-                    for (String metaPart : metaParts) {
-                        if (metaPart.isEmpty()) continue;
-                        
-                        if (metaPart.startsWith("name" + DELIMITER)) {
-                            String displayName = metaPart.substring(("name" + DELIMITER).length());
-                            meta.setDisplayName(displayName);
-                        } else if (metaPart.startsWith("lore" + DELIMITER)) {
-                            String loreData = metaPart.substring(("lore" + DELIMITER).length());
-                            if (!loreData.isEmpty()) {
-                                meta.setLore(Arrays.asList(loreData.split("\\" + LORE_DELIMITER)));
+                    String[] metaSections = remaining.split(META_DELIMITER);
+                    for (String section : metaSections) {
+                        if (section.isEmpty())
+                            continue;
+
+                        if (section.startsWith("name" + DELIMITER)) {
+                            String name = section.substring(5);
+                            name = name.replace("\\:", ":").replace("\\~", "~").replace("\\|", "|");
+                            meta.setDisplayName(UniversalTextApi.colorize(name));
+                        } else if (section.startsWith("lore" + DELIMITER)) {
+                            String loreStr = section.substring(5);
+                            if (!loreStr.isEmpty()) {
+                                List<String> lore = Arrays.stream(loreStr.split("\\" + LORE_DELIMITER))
+                                        .map(line -> line.replace("\\:", ":").replace("\\~", "~").replace("\\|", "|"))
+                                        .map(UniversalTextApi::colorize)
+                                        .collect(Collectors.toList());
+                                meta.setLore(lore);
                             }
+                        } else if (section.startsWith("ench" + DELIMITER)) {
+                            String enchStr = section.substring(5);
+                            if (!enchStr.isEmpty()) {
+                                String[] enchParts = enchStr.split(DELIMITER);
+                                for (String ench : enchParts) {
+                                    String[] e = ench.split(":");
+                                    if (e.length == 2) {
+                                        Enchantment enc = Enchantment.getByKey(NamespacedKey.minecraft(e[0]));
+                                        if (enc != null) {
+                                            item.addUnsafeEnchantment(enc, Integer.parseInt(e[1]));
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (section.startsWith("flags" + DELIMITER)) {
+                            String flagsStr = section.substring(6);
+                            if (!flagsStr.isEmpty()) {
+                                String[] flags = flagsStr.split(",");
+                                for (String flag : flags) {
+                                    try {
+                                        meta.addItemFlags(ItemFlag.valueOf(flag));
+                                    } catch (IllegalArgumentException ignored) {
+                                    }
+                                }
+                            }
+                        } else if (section.startsWith("unbreakable" + DELIMITER)) {
+                            meta.setUnbreakable(true);
+                        } else if (section.startsWith("color" + DELIMITER) && meta instanceof LeatherArmorMeta) {
+                            int rgb = Integer.parseInt(section.substring(6));
+                            ((LeatherArmorMeta) meta).setColor(Color.fromRGB(rgb));
+                        } else if (section.startsWith("potion_effects" + DELIMITER) && meta instanceof PotionMeta) {
+                            String effectsData = section.substring(14);
+                            deserializePotionEffects((PotionMeta) meta, effectsData);
                         }
                     }
                 }
@@ -163,7 +297,7 @@ public class ItemStackSerialize {
 
             return Optional.of(item);
         } catch (Exception e) {
-            ConsoleLogger.error("baselibrary", "An error occurred when parsing the %s string into the ItemStack item, the reason is %s.", data, e.getMessage());
+            ConsoleLogger.error("baselibrary", "Deserialize error: %s", e.getMessage());
             return Optional.empty();
         }
     }
@@ -171,13 +305,16 @@ public class ItemStackSerialize {
     public static void deserializePotionEffects(PotionMeta meta, String[] effectData) {
         for (String effectPart : String.join(DELIMITER, effectData).split(EFFECT_DELIMITER)) {
             if (effectPart.isEmpty()) {
-                ConsoleLogger.warn("baselibrary", "Couldn't apply result of string parsing to PotionMeta (effectPart is empty)");
+                ConsoleLogger.warn("baselibrary",
+                        "Couldn't apply result of string parsing to PotionMeta (effectPart is empty)");
                 continue;
             }
 
             String[] effectParts = effectPart.split(DELIMITER);
             if (effectParts.length < 3) {
-                ConsoleLogger.warn("baselibrary", "Couldn't apply result of %s string parsing to PotionMeta (effectPart.split(%s) < 3)", effectPart, DELIMITER);
+                ConsoleLogger.warn("baselibrary",
+                        "Couldn't apply result of %s string parsing to PotionMeta (effectPart.split(%s) < 3)",
+                        effectPart, DELIMITER);
                 continue;
             }
 
@@ -187,7 +324,9 @@ public class ItemStackSerialize {
                 int amplifier = Integer.parseInt(effectParts[2]);
                 meta.addCustomEffect(new PotionEffect(type, duration, amplifier), true);
             } catch (Exception e) {
-                ConsoleLogger.error("baselibrary", "An error occurred when applying the result of parsing the %s string to PotionMeta, the reason is %s.", effectParts.toString(), e.getMessage());
+                ConsoleLogger.error("baselibrary",
+                        "An error occurred when applying the result of parsing the %s string to PotionMeta, the reason is %s.",
+                        effectParts.toString(), e.getMessage());
             }
         }
     }
