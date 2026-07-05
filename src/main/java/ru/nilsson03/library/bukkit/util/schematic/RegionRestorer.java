@@ -1,12 +1,27 @@
 package ru.nilsson03.library.bukkit.util.schematic;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
+
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.*;
+import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
@@ -14,18 +29,9 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.session.ClipboardHolder;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
+
 import ru.nilsson03.library.bukkit.util.loc.Cuboid;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class RegionRestorer {
     private final Plugin plugin;
@@ -42,7 +48,8 @@ public class RegionRestorer {
 
     /**
      * Запланировать восстановление региона
-     * @param cuboid Регион для восстановления
+     * 
+     * @param cuboid       Регион для восстановления
      * @param delayMinutes время до восстановления в минутах
      */
     public void scheduleRegionRestore(Cuboid cuboid, String uniqueName, long delayMinutes) {
@@ -74,22 +81,21 @@ public class RegionRestorer {
         Region region = new CuboidRegion(
                 world,
                 min,
-                max
-        );
+                max);
 
         BlockArrayClipboard clipboard = new BlockArrayClipboard(region);
 
         try (EditSession editSession = WorldEdit.getInstance().newEditSession(region.getWorld())) {
             ForwardExtentCopy copy = new ForwardExtentCopy(
-                    editSession, region, clipboard, region.getMinimumPoint()
-            );
+                    editSession, region, clipboard, region.getMinimumPoint());
             Operations.complete(copy);
 
-            try (ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(Files.newOutputStream(backupFile.toPath()))) {
+            try (ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC
+                    .getWriter(Files.newOutputStream(backupFile.toPath()))) {
                 writer.write(clipboard);
             }
         } catch (IOException | WorldEditException e) {
-            ConsoleLogger.error("baselobrary", "Failed to save region backup (ex %s)", e.getMessage());
+            ConsoleLogger.error("baselibrary", "Failed to save region backup (ex %s)", e.getMessage());
         }
     }
 
@@ -116,7 +122,7 @@ public class RegionRestorer {
 
             backupFile.delete();
         } catch (Exception e) {
-            ConsoleLogger.error("baselobrary", "Failed to restore region %s (ex %s)", uniqueName, e.getMessage());
+            ConsoleLogger.error("baselibrary", "Failed to restore region %s (ex %s)", uniqueName, e.getMessage());
         }
     }
 
