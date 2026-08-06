@@ -72,6 +72,11 @@ public class MenuProtectionListener implements Listener {
             return;
         }
         Player player = (Player) event.getPlayer();
+
+        if (event.getReason() != InventoryCloseEvent.Reason.OPEN_NEW) {
+            MenuHistoryManager.clearHistory(player);
+        }
+
         Bukkit.getScheduler().runTask(BaseLibrary.getInstance(), player::updateInventory);
     }
 }
