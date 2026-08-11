@@ -19,14 +19,21 @@ public class BackButton extends PageItem {
 
     private final FileConfiguration config;
 
+    @Deprecated
     public BackButton(ParameterFile config) {
         super(false);
         this.config = config.getFileConfiguration();
     }
 
+    @Deprecated
     public BackButton(BukkitConfig config) {
         super(false);
         this.config = config.getFileConfiguration();
+    }
+
+    public BackButton(FileConfiguration config) {
+        super(false);
+        this.config = config;
     }
 
     public ItemProvider getItemProvider(PagedGui<?> gui) {

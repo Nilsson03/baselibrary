@@ -25,9 +25,15 @@ public class ForwardButton extends PageItem {
         this.config = config.getFileConfiguration();
     }
 
+    @Deprecated
     public ForwardButton(BukkitConfig config) {
         super(true);
         this.config = config.getFileConfiguration();
+    }
+
+    public ForwardButton(FileConfiguration config) {
+        super(true);
+        this.config = config;
     }
 
     public ItemProvider getItemProvider(PagedGui<?> gui) {

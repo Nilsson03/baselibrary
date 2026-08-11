@@ -64,17 +64,20 @@ public class MenuActionFactory {
     }
 
     private static MenuAction parseCommand(String commandLine) {
+        Function<String, MenuAction> defaultParser = null;
+
         for (Map.Entry<Pattern, Function<String, MenuAction>> entry : PARSERS.entrySet()) {
             Pattern pattern = entry.getKey();
             Function<String, MenuAction> parser = entry.getValue();
 
             if (pattern == null) {
-                return parser.apply(commandLine);
+                defaultParser = parser;
+                continue;
             }
 
             Matcher matcher = pattern.matcher(commandLine);
             if (matcher.matches()) {
-                String argument = null;
+                String argument;
                 try {
                     argument = matcher.group(1);
                 } catch (IndexOutOfBoundsException e) {
@@ -84,6 +87,9 @@ public class MenuActionFactory {
             }
         }
 
+        if (defaultParser != null) {
+            return defaultParser.apply(commandLine);
+        }
         return new PlayerMenuAction(commandLine);
     }
 }
