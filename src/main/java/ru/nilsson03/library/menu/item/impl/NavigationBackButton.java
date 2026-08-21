@@ -49,14 +49,16 @@ public class NavigationBackButton extends SimpleItem {
         }
     }
 
+    private static final String PATH = "menu.items.buttons.previous-button";
+
     private static ItemProvider getBackButtonItemProvider(FileConfiguration config) {
-        String type = config.getString("inventories.buttons.previous-button.type", "material");
-        String displayName = config.getString("inventories.buttons.previous-button.name");
+        String type = config.getString(PATH + ".type", "material");
+        String displayName = config.getString(PATH + ".name");
         if (displayName != null) {
             displayName = UniversalTextApi.colorize(displayName);
         }
-        
-        List<String> lore = config.getStringList("inventories.buttons.previous-button.lore");
+
+        List<String> lore = config.getStringList(PATH + ".lore");
         if (lore != null && !lore.isEmpty()) {
             lore = lore.stream()
                     .map(UniversalTextApi::colorize)
@@ -65,14 +67,18 @@ public class NavigationBackButton extends SimpleItem {
 
         ItemStack itemStack;
         if (type.equalsIgnoreCase("head")) {
-            String url = config.getString("inventories.buttons.previous-button.head-id", "");
+            String url = config.getString(PATH + ".head-id", "");
             itemStack = ItemUtil.createHead(url)
                     .setDisplayName(displayName)
                     .setLore(lore)
                     .build();
         } else {
-            String materialName = config.getString("inventories.buttons.previous-button.material", "ARROW");
-            itemStack = new SpigotItemBuilder(Material.valueOf(materialName))
+            String materialName = config.getString(PATH + ".material", "ARROW");
+            Material material = Material.matchMaterial(materialName);
+            if (material == null) {
+                material = Material.ARROW;
+            }
+            itemStack = new SpigotItemBuilder(material)
                     .setDisplayName(displayName)
                     .setLore(lore)
                     .build();

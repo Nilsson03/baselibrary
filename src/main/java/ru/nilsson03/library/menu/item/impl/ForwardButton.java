@@ -3,8 +3,6 @@ package ru.nilsson03.library.menu.item.impl;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
-import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
-import ru.nilsson03.library.bukkit.file.configuration.ParameterFile;
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.util.ItemUtil;
 import ru.nilsson03.library.invui.gui.PagedGui;
@@ -17,19 +15,9 @@ import java.util.List;
 
 public class ForwardButton extends PageItem {
 
+    private static final String PATH = "menu.items.buttons.forward-button";
+
     private final FileConfiguration config;
-
-    @Deprecated
-    public ForwardButton(ParameterFile config) {
-        super(true);
-        this.config = config.getFileConfiguration();
-    }
-
-    @Deprecated
-    public ForwardButton(BukkitConfig config) {
-        super(true);
-        this.config = config.getFileConfiguration();
-    }
 
     public ForwardButton(FileConfiguration config) {
         super(true);
@@ -37,20 +25,24 @@ public class ForwardButton extends PageItem {
     }
 
     public ItemProvider getItemProvider(PagedGui<?> gui) {
-        String type = config.getString("inventories.buttons.forward-button.type");
-        String displayName = UniversalTextApi.colorize(config.getString("inventories.buttons.forward-button.name"));
-        List<String> lore = UniversalTextApi.colorize(config.getStringList("inventories.buttons.forward-button.lore"));
+        String type = config.getString(PATH + ".type", "material");
+        String displayName = UniversalTextApi.colorize(config.getString(PATH + ".name", "&7Вперёд ▶"));
+        List<String> lore = UniversalTextApi.colorize(config.getStringList(PATH + ".lore"));
 
         ItemStack itemStack;
         if (type.equalsIgnoreCase("head")) {
-            String url = config.getString("inventories.buttons.forward-button.head-id");
+            String url = config.getString(PATH + ".head-id", "");
             itemStack = ItemUtil.createHead(url)
                     .setDisplayName(displayName)
                     .setLore(lore)
                     .build();
         } else {
-            String materialName = config.getString("inventories.buttons.forward-button.material");
-            itemStack = new SpigotItemBuilder(Material.valueOf(materialName))
+            String materialName = config.getString(PATH + ".material", "ARROW");
+            Material material = Material.matchMaterial(materialName);
+            if (material == null) {
+                material = Material.ARROW;
+            }
+            itemStack = new SpigotItemBuilder(material)
                     .setDisplayName(displayName)
                     .setLore(lore)
                     .build();

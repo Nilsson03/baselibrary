@@ -9,8 +9,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 
-import ru.nilsson03.library.bukkit.file.configuration.BukkitConfig;
-import ru.nilsson03.library.bukkit.file.configuration.ConfigOperations;
 import ru.nilsson03.library.bukkit.item.builder.SkullItemBuilder;
 import ru.nilsson03.library.bukkit.item.builder.impl.SpigotItemBuilder;
 import ru.nilsson03.library.bukkit.item.builder.impl.UniversalSkullBuilder;
@@ -69,29 +67,35 @@ public class ItemUtil {
                 .anyMatch(itemEnchantment -> itemEnchantment.equals(enchantment));
     }
 
-    public static ItemStack createItem(BukkitConfig config,
+    public static ItemStack createItem(FileConfiguration configuration,
             String path,
             ReplaceData... replaceData) {
-        ConfigOperations configOperations = config.operations();
-        String type = configOperations.getString(path + ".type", "material");
-        FileConfiguration configuration = config.getFileConfiguration();
+        Objects.requireNonNull(configuration, "configuration can't be null");
+        Objects.requireNonNull(path, "path can't be null");
+
+        String type = configuration.getString(path + ".type", "material");
         List<String> lore = new ArrayList<>();
         if (configuration.contains(path + ".lore")) {
-            lore = UniversalTextApi.colorize(configOperations.getList(path + ".lore", replaceData));
+            lore = UniversalTextApi.colorize(
+                    UniversalTextApi.replacePlaceholders(configuration.getStringList(path + ".lore"), replaceData)
+            );
         }
         String displayName = "";
         if (configuration.contains(path + ".displayName")) {
-            displayName = UniversalTextApi.colorize(configOperations.getString(path + ".displayName", replaceData));
+            String rawName = configuration.getString(path + ".displayName", "");
+            displayName = UniversalTextApi.colorize(
+                    UniversalTextApi.replacePlaceholders(rawName, replaceData)
+            );
         }
 
         if (type.equalsIgnoreCase("head")) {
-            String texture = configOperations.getString(path + ".head-id");
+            String texture = configuration.getString(path + ".head-id", "");
             return createHead(texture)
                     .setLore(lore)
                     .setDisplayName(displayName)
                     .build();
         } else {
-            String material = configOperations.getString(path + ".material");
+            String material = configuration.getString(path + ".material", "STONE");
             return new SpigotItemBuilder()
                     .setType(material)
                     .setDisplayName(displayName)

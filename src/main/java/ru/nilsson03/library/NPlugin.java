@@ -1,14 +1,11 @@
 package ru.nilsson03.library;
 
-import java.util.Optional;
-
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ru.nilsson03.library.bukkit.file.BukkitDirectory;
-import ru.nilsson03.library.bukkit.file.FileRepository;
 import ru.nilsson03.library.bukkit.integration.Integration;
 import ru.nilsson03.library.bukkit.notify.PlayerNotificationService;
 import ru.nilsson03.library.bukkit.scheduler.TaskScheduler;
+import ru.nilsson03.library.bukkit.util.file.DirectoryHelper;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
 
 public abstract class NPlugin extends JavaPlugin {
@@ -16,7 +13,7 @@ public abstract class NPlugin extends JavaPlugin {
     private static Integration integration;
     private PlayerNotificationService notificationService;
     private TaskScheduler taskScheduler;
-    private FileRepository fileRepository;
+    private DirectoryHelper directoryHelper;
 
     @Override
     public final void onEnable() {
@@ -32,7 +29,7 @@ public abstract class NPlugin extends JavaPlugin {
             boolean writeLogs = getConfig().getBoolean("writeLogs", false);
             ConsoleLogger.register(this, writeLogs);
             integration = new Integration(this);
-            fileRepository = new FileRepository(this);
+            directoryHelper = DirectoryHelper.of(this);
             taskScheduler = new TaskScheduler(this);
             enable();
             ConsoleLogger.info(this, "%s plugin loaded successfully.", getDescription().getName());
@@ -49,7 +46,9 @@ public abstract class NPlugin extends JavaPlugin {
     public final void onDisable() {
         try {
             disable();
-            fileRepository.unregister();
+            if (directoryHelper != null) {
+                directoryHelper.unregister();
+            }
             ConsoleLogger.unregister(this);
             getLogger().info(getDescription().getName() + " disabled!");
         } catch (Exception e) {
@@ -57,10 +56,10 @@ public abstract class NPlugin extends JavaPlugin {
         }
     }
 
-    public BukkitDirectory getDirectory(String name) {
-        Optional<BukkitDirectory> optionalBukkitDirectory = this.fileRepository.getDirectoryOrLoad(name);
-        if (optionalBukkitDirectory.isPresent()) {
-            return optionalBukkitDirectory.get();
+    public DirectoryHelper.Directory getDirectory(String name) {
+        DirectoryHelper.Directory directory = this.directoryHelper.getOrLoad(name);
+        if (directory != null) {
+            return directory;
         }
 
         ConsoleLogger.debug(this, "Couldn't load %s directory", name);
@@ -96,7 +95,7 @@ public abstract class NPlugin extends JavaPlugin {
         return taskScheduler;
     }
 
-    public FileRepository fileRepository() {
-        return fileRepository;
+    public DirectoryHelper directoryHelper() {
+        return directoryHelper;
     }
 }
