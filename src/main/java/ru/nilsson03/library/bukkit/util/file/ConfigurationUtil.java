@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -84,8 +85,23 @@ public class ConfigurationUtil {
         Objects.requireNonNull(config, "config cannot be null");
         Objects.requireNonNull(configFile, "configFile cannot be null");
 
+        File parent = configFile.getAbsoluteFile().getParentFile();
         try {
-            config.save(configFile);
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                throw new IOException("Failed to create directory: " + parent);
+            }
+            File temporary = File.createTempFile(configFile.getName(), ".tmp", parent);
+            try {
+                config.save(temporary);
+                try {
+                    Files.move(temporary.toPath(), configFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                } catch (AtomicMoveNotSupportedException ignored) {
+                    Files.move(temporary.toPath(), configFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+            } finally {
+                Files.deleteIfExists(temporary.toPath());
+            }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to save config: " + configFile.getPath(), e);
         }

@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +49,10 @@ public class PlayerNotificationService {
             throw new IllegalStateException("Already initialized for plugin " + plugin.getName());
         }
         this.plugin = plugin;
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(Duration.class, new DurationTypeAdapter())
+                .setPrettyPrinting()
+                .create();
         this.pendingRegistry = new PendingNotificationRegistry();
         this.storageFile = new File(plugin.getDataFolder(), "pending_notifications.json");
         this.scheduler = Executors.newSingleThreadScheduledExecutor(

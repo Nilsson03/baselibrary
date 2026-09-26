@@ -30,6 +30,8 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import ru.nilsson03.library.BaseLibrary;
+import ru.nilsson03.library.invui.gui.Gui;
+import ru.nilsson03.library.invui.gui.SlotElement;
 import ru.nilsson03.library.invui.window.Window;
 import ru.nilsson03.library.invui.window.WindowManager;
 
@@ -162,6 +164,24 @@ class MenuProtectionListenerTest {
     }
 
     @Test
+    @DisplayName("InvUI с VirtualInventory: ввод предметов передаётся InvUI")
+    void allowsInputForEditableInventorySlots() {
+        stubDangerousClick(InventoryAction.MOVE_TO_OTHER_INVENTORY, ClickType.SHIFT_LEFT);
+
+        EditableWindow editableWindow = mock(EditableWindow.class);
+        Gui gui = mock(Gui.class);
+        SlotElement.InventorySlotElement inventorySlot = mock(SlotElement.InventorySlotElement.class);
+        when(editableWindow.getGui()).thenReturn(gui);
+        when(gui.getSlotElements()).thenReturn(new SlotElement[]{inventorySlot});
+        when(inventorySlot.getHoldingElement()).thenReturn(inventorySlot);
+
+        withWindowManager(editableWindow, null, () -> {
+            listener.onInventoryClick(event);
+            assertProtectionNotApplied();
+        });
+    }
+
+    @Test
     @DisplayName("Не-игрок: обработчик ничего не делает")
     void ignoresNonPlayerClicker() {
         when(event.getWhoClicked()).thenReturn(mock(org.bukkit.entity.HumanEntity.class));
@@ -229,5 +249,9 @@ class MenuProtectionListenerTest {
         public Inventory getInventory() {
             return null;
         }
+    }
+
+    private interface EditableWindow extends Window {
+        Gui getGui();
     }
 }

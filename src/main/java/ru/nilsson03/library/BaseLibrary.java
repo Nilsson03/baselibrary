@@ -21,6 +21,13 @@ public class BaseLibrary extends JavaPlugin {
     public void onEnable() {
         instance = this;
         this.saveDefaultConfig();
+        getConfig().addDefault("item-editor.rarity.min-level", 1);
+        getConfig().addDefault("item-editor.rarity.max-level", 5);
+        for (int level = 1; level <= 5; level++) {
+            getConfig().addDefault("item-editor.rarity.limits." + level, -1);
+        }
+        getConfig().options().copyDefaults(true);
+        saveConfig();
         ServerVersion currentVersion = ServerVersionUtils.getServerVersion();
 
         if (currentVersion.isOlderThan(ServerVersion.v1_16)) {

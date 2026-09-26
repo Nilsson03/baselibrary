@@ -1,6 +1,19 @@
 debug: true
 writeLogs: true
 
+# Shared item-editor settings. Level 1 keeps compatibility with old plugins.
+item-editor:
+  rarity:
+    min-level: 1
+    max-level: 5
+    # Maximum selected loot entries per level (-1 = unlimited).
+    limits:
+      1: -1
+      2: -1
+      3: -1
+      4: -1
+      5: -1
+
 time:
   seconds_first_form: "секунда"
   seconds_second_form: "секунды"

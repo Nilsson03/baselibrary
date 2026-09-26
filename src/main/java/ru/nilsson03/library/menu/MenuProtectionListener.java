@@ -11,6 +11,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import ru.nilsson03.library.BaseLibrary;
+import ru.nilsson03.library.invui.gui.Gui;
+import ru.nilsson03.library.invui.gui.SlotElement;
 import ru.nilsson03.library.invui.window.Window;
 import ru.nilsson03.library.invui.window.WindowManager;
 
@@ -29,7 +31,14 @@ public class MenuProtectionListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         Inventory topInventory = event.getView().getTopInventory();
 
-        if (topInventory == null || !isInvUiMenu(player, topInventory)) {
+        Window window = getInvUiWindow(player, topInventory);
+        if (topInventory == null || window == null) {
+            return;
+        }
+
+        // InvUI validates input actions for its own VirtualInventory slots. Blocking those
+        // actions here makes editor input slots unusable.
+        if (hasEditableInventorySlots(window)) {
             return;
         }
 
@@ -74,11 +83,38 @@ public class MenuProtectionListener implements Listener {
      * and must not be treated as menus.
      */
     static boolean isInvUiMenu(Player player, Inventory topInventory) {
+        return getInvUiWindow(player, topInventory) != null;
+    }
+
+    private static Window getInvUiWindow(Player player, Inventory topInventory) {
+        if (topInventory == null) {
+            return null;
+        }
         WindowManager manager = WindowManager.getInstance();
         Window byInventory = manager.getWindow(topInventory);
         if (byInventory != null) {
-            return true;
+            return byInventory;
         }
-        return manager.getOpenWindow(player) != null;
+        return manager.getOpenWindow(player);
+    }
+
+    private static boolean hasEditableInventorySlots(Window window) {
+        final Object guiObject;
+        try {
+            guiObject = window.getClass().getMethod("getGui").invoke(window);
+        } catch (ReflectiveOperationException ignored) {
+            return false;
+        }
+        if (!(guiObject instanceof Gui)) return false;
+
+        SlotElement[] elements = ((Gui) guiObject).getSlotElements();
+        for (SlotElement element : elements) {
+            if (element == null) continue;
+            SlotElement holdingElement = element.getHoldingElement();
+            if (holdingElement instanceof SlotElement.InventorySlotElement) {
+                return true;
+            }
+        }
+        return false;
     }
 }

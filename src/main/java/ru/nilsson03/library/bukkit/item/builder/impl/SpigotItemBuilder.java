@@ -23,6 +23,7 @@ public class SpigotItemBuilder implements ItemBuilder {
 
     private ItemStack itemStack;
     private ItemMeta itemMeta;
+    private boolean itemMetaChanged;
 
     public SpigotItemBuilder() {
         this(Material.STONE);
@@ -34,14 +35,12 @@ public class SpigotItemBuilder implements ItemBuilder {
 
     public SpigotItemBuilder(ItemStack itemStack) {
         this.itemStack = Objects.requireNonNull(itemStack.clone());
-        this.itemMeta = Optional.ofNullable(itemStack.getItemMeta())
-                .orElse(Bukkit.getItemFactory().getItemMeta(itemStack.getType()));
     }
 
     public SpigotItemBuilder update(ItemStack itemStack) {
         this.itemStack = Objects.requireNonNull(itemStack).clone();
-        this.itemMeta = Optional.ofNullable(itemStack.getItemMeta())
-                .orElse(Bukkit.getItemFactory().getItemMeta(itemStack.getType()));
+        this.itemMeta = null;
+        this.itemMetaChanged = false;
         return this;
     }
 
@@ -58,22 +57,27 @@ public class SpigotItemBuilder implements ItemBuilder {
     }
 
     public SpigotItemBuilder addLine(String line) {
-        List<String> lore = Optional.ofNullable(itemMeta.getLore())
+        ItemMeta meta = getOrCreateMeta();
+        List<String> lore = Optional.ofNullable(meta.getLore())
                 .orElse(new ArrayList<>());
         lore.add(UniversalTextApi.colorize(line));
-        itemMeta.setLore(lore);
+        meta.setLore(lore);
+        itemMetaChanged = true;
         return this;
     }
 
     public SpigotItemBuilder setLore(List<String> lines) {
-        itemMeta.setLore(UniversalTextApi.colorize(lines));
+        getOrCreateMeta().setLore(UniversalTextApi.colorize(lines));
+        itemMetaChanged = true;
         return this;
     }
 
     public SpigotItemBuilder setLeatherColor(Color color) {
         if (LEATHER_ARMOR.contains(itemStack.getType())) {
-            if (itemMeta instanceof LeatherArmorMeta) {
-                ((LeatherArmorMeta) itemMeta).setColor(color);
+            ItemMeta meta = getOrCreateMeta();
+            if (meta instanceof LeatherArmorMeta) {
+                ((LeatherArmorMeta) meta).setColor(color);
+                itemMetaChanged = true;
             }
         }
         return this;
@@ -90,22 +94,26 @@ public class SpigotItemBuilder implements ItemBuilder {
     }
 
     public SpigotItemBuilder addEnchant(Enchantment enchantment, int level) {
-        itemMeta.addEnchant(enchantment, level, true);
+        getOrCreateMeta().addEnchant(enchantment, level, true);
+        itemMetaChanged = true;
         return this;
     }
 
     public SpigotItemBuilder removeEnchant(Enchantment enchantment) {
-        itemMeta.removeEnchant(enchantment);
+        getOrCreateMeta().removeEnchant(enchantment);
+        itemMetaChanged = true;
         return this;
     }
 
     public SpigotItemBuilder addFlag(ItemFlag flag) {
-        itemMeta.addItemFlags(flag);
+        getOrCreateMeta().addItemFlags(flag);
+        itemMetaChanged = true;
         return this;
     }
 
     public SpigotItemBuilder setUnbreakable(boolean unbreakable) {
-        itemMeta.setUnbreakable(unbreakable);
+        getOrCreateMeta().setUnbreakable(unbreakable);
+        itemMetaChanged = true;
         return this;
     }
 
@@ -118,13 +126,15 @@ public class SpigotItemBuilder implements ItemBuilder {
 
     public SpigotItemBuilder setCustomModelData(int data) {
         if (data >= 0) {
-            itemMeta.setCustomModelData(data);
+            getOrCreateMeta().setCustomModelData(data);
+            itemMetaChanged = true;
         }
         return this;
     }
 
     public SpigotItemBuilder setDisplayName(String name) {
-        itemMeta.setDisplayName(UniversalTextApi.colorize(name));
+        getOrCreateMeta().setDisplayName(UniversalTextApi.colorize(name));
+        itemMetaChanged = true;
         return this;
     }
 
@@ -146,32 +156,49 @@ public class SpigotItemBuilder implements ItemBuilder {
 
     public SpigotItemBuilder setMeta(ItemMeta meta) {
         this.itemMeta = Objects.requireNonNull(meta);
+        this.itemMetaChanged = true;
         return this;
     }
 
     public SpigotItemBuilder glowing() {
-        if (itemMeta.hasEnchant(Enchantment.LUCK)) {
-            itemMeta.removeEnchant(Enchantment.LUCK);
+        ItemMeta meta = getOrCreateMeta();
+        if (meta.hasEnchant(Enchantment.LUCK)) {
+            meta.removeEnchant(Enchantment.LUCK);
         } else {
-            itemMeta.addEnchant(Enchantment.LUCK, 1, true);
+            meta.addEnchant(Enchantment.LUCK, 1, true);
             addFlag(ItemFlag.HIDE_ENCHANTS);
         }
+        itemMetaChanged = true;
         return this;
     }
 
     @Override
     public ItemStack build() {
-        itemStack.setItemMeta(itemMeta);
+        // On legacy Bukkit/Purpur versions, writing an unchanged ItemMeta back can
+        // discard raw NBT tags unknown to Bukkit. Keep an untouched source stack
+        // byte-for-byte equivalent unless this builder actually changed its meta.
+        if (itemMetaChanged) {
+            itemStack.setItemMeta(itemMeta);
+        }
         return itemStack.clone();
     }
 
     public ItemBuilder apply(Consumer<ItemMeta> metaConsumer) {
-        metaConsumer.accept(itemMeta);
+        metaConsumer.accept(getOrCreateMeta());
+        itemMetaChanged = true;
         return this;
     }
 
     private void updateMeta() {
-        this.itemMeta = Optional.ofNullable(itemStack.getItemMeta())
-                .orElse(Bukkit.getItemFactory().getItemMeta(itemStack.getType()));
+        this.itemMeta = null;
+        this.itemMetaChanged = false;
+    }
+
+    private ItemMeta getOrCreateMeta() {
+        if (itemMeta == null) {
+            itemMeta = Optional.ofNullable(itemStack.getItemMeta())
+                    .orElse(Bukkit.getItemFactory().getItemMeta(itemStack.getType()));
+        }
+        return itemMeta;
     }
 }

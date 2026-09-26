@@ -13,6 +13,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
@@ -280,7 +281,15 @@ public class TranslationUtil {
             return UniversalTextApi.colorize(defaultValue);
         }
 
-        String translation = config.getString(path);
+        // getString() may stringify a YAML section as
+        // "MemorySection[path=..., root=YamlConfiguration]". This is not a
+        // translation and must never leak into item names/lore.
+        Object raw = config.get(path);
+        if (raw instanceof ConfigurationSection || !(raw instanceof String)) {
+            return UniversalTextApi.colorize(defaultValue);
+        }
+
+        String translation = (String) raw;
 
         if (translation == null || translation.isEmpty()) {
             return UniversalTextApi.colorize(defaultValue);

@@ -1,0 +1,12 @@
+itemstack:
+  material: POTION
+  amount: 1
+  name: "&cТестовое зелье"
+  customModelData: 0
+  potionData:
+    type: POISON
+    duration: 5
+    amplifier: 1
+    color: "#F38BAA"
+  enchantments:
+    unbreaking: 1
