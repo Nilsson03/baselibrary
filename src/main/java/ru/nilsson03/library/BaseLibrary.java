@@ -8,6 +8,7 @@ import ru.nilsson03.library.bukkit.util.ServerVersion;
 import ru.nilsson03.library.bukkit.util.ServerVersionUtils;
 import ru.nilsson03.library.bukkit.util.TranslationUtil;
 import ru.nilsson03.library.bukkit.util.log.ConsoleLogger;
+import ru.nilsson03.library.menu.MenuHistoryListener;
 import ru.nilsson03.library.menu.MenuProtectionListener;
 import ru.nilsson03.library.text.component.action.ClickActionRegistry;
 
@@ -44,6 +45,7 @@ public class BaseLibrary extends JavaPlugin {
         ClickActionRegistry.register(this);
 
         Bukkit.getPluginManager().registerEvents(new MenuProtectionListener(), this);
+        Bukkit.getPluginManager().registerEvents(new MenuHistoryListener(), this);
 
         TranslationUtil.initialize(this);
         TranslationUtil.loadTranslations("ru");
